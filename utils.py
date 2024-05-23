@@ -5,7 +5,7 @@ import pandas as pd
 from glob import glob
 import xml.etree.ElementTree as ET
 
-def loadData(data_professores, data_salas, data_turmas):
+def loadData(data_professores, data_salas, data_disciplinasTurmas, carga_Professores):
 
     # Inicializando os dicionarios
     turmas = {}
@@ -26,8 +26,56 @@ def loadData(data_professores, data_salas, data_turmas):
             professores[matricula] = prof
         else:
             pass
+        
+    # Adicionando a carga horaria do professor
+    for _, professor in carga_Professores.iterrows():
+        matricula = professor['MATRÍCULA']
+        cargaHoraria = professor["""CONTRATO
+PADRÃO (2024.1)"""]
+        
+        if str(matricula) in professores:
+            prof = professores[str(matricula)]
+            prof.setCargaHoraria(cargaHoraria)
+            professores[matricula] = prof
 
+    # Populando as disciplinas e turmas
+    for _, disciplina in data_disciplinasTurmas.iterrows():
 
+        turno = siglaTurno(disciplina["Turno"])
+        siglaCurso = disciplina["Grade Curricular"].split(" ")[0]
+        # Colocando a turma no formato
+        turma = f'{siglaCurso} - {disciplina["Período"]}{disciplina["Turma"]} - {turno} - {semestre_atual}'
+
+        # Pegando os dados da disciplina
+        nome = disciplina['Nome da Disciplina']
+        codigo = disciplina['Código da Disciplina']
+        tipo = disciplina["Tipo de Atividade"]
+        ch = disciplina['CH / Nº de Créditos']
+        qtdEstudantes = disciplina["qtdEstudantes"]
+        periodo = disciplina['Período']
+        curso = disciplina['Nome do Curso']
+
+        # Chave de disciplina turma
+        chave = f'{codigo} | {turma}'
+
+        # Criando um objeto de Disciplina
+        objDiscipina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtdEstudantes)
+        if disciplina["DOCENTE"] != "nan":
+            objDiscipina.addProf(disciplina["DOCENTE"])
+
+        # Criando um objeto de turma caso não exista ou adicionando a disciplina caso exista
+        if turma not in turmas:
+            objTurma = Turma(turma, curso, disciplina["Turno"])
+            objTurma.addDisciplina(chave)
+            objTurma.setGrade(criarGrade())
+            turmas[turma] = objTurma
+        elif turma in turmas:
+            t = turmas[turma]
+            if chave not in t.disciplinas:
+                t.addDisciplina(chave)
+            turmas[turma] = t
+
+        disciplinas[chave] = objDiscipina
 
     return Data(turmas, professores, salas, disciplinas)
 
@@ -110,13 +158,31 @@ def lerXML(arquivo):
 
     return datasets
 
+def siglaTurno(turno):
+    siglaTurno = ""
+    if turno == "Manhã":
+        siglaTurno = "M"
+    elif turno == "Noite":
+        siglaTurno = "N"
+    elif turno == "Tarde":
+        siglaTurno = "T"
+    elif turno == "Manhã e Tarde":
+        siglaTurno = "I"
+    else:
+        pass
+    return siglaTurno
 
 if __name__ == '__main__':
 
-    df = lerXML("")
+    df = lerXML("../Data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
     df_prof = df['teachers']
 
-    teste = loadData(df_prof, "", "")
-    print(teste.professores)
+    semestre_atual = "2024/1"
+
+    df_cargaProf = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
+    df_disciplinasTurmas = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="DISCIPLINAS REGULARES", skiprows=4)
+
+    teste = loadData(df_prof, "", df_disciplinasTurmas, df_cargaProf)
+    print(teste.turmas)
 
 
