@@ -23,7 +23,7 @@ class Professor:
     def __init__(self, nome, matricula):
         self.matricula = matricula
         self.nome = nome
-        self.disponibilidade = {}
+        self.disponibilidade = []
         self.grade = {}
         self.cargaHoraria = 0
         self.disciplinas = []

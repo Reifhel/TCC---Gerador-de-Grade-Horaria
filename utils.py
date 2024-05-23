@@ -75,7 +75,13 @@ PADRÃO (2024.1)"""]
                 t.addDisciplina(chave)
             turmas[turma] = t
 
-        disciplinas[chave] = objDiscipina
+        if chave not in disciplinas:
+            disciplinas[chave] = objDiscipina
+
+    # Populando as salas
+    for _, salas in data_salas.iterrows():
+        # TODO
+        pass
 
     return Data(turmas, professores, salas, disciplinas)
 
@@ -111,23 +117,12 @@ def arrumaDisponibilidade(disponibilidade):
 
     # Definição da Grade
     grade = {}
-    disponibilidadeFormatada = disponibilidade.replace(".", "").split(",")
+    splitDisponibilidade = disponibilidade.replace(".", "").split(",")
 
-    for dia in range(0, len(disponibilidadeFormatada)):
-        grade[dias[dia]] = {}
-        grade[dias[dia]]["Manhã"] = {}
-        grade[dias[dia]]["Tarde"] = {}
-        grade[dias[dia]]["Noite"] = {}
+    for i, dia in enumerate(dias):
+        disponibilidadeDia = list(splitDisponibilidade[i])
 
-        for i, disponivel in enumerate((disponibilidadeFormatada[dia])):
-            valor = True if disponivel == "1" else False
-
-            if i <= 7:
-                grade[dias[dia]]["Manhã"][i+1] = valor
-            elif i >= 15:
-                grade[dias[dia]]["Noite"][i+1] = valor
-            else:
-                grade[dias[dia]]["Tarde"][i+1] = valor
+        grade[dia] = disponibilidadeDia
 
     return grade
 
@@ -176,13 +171,14 @@ if __name__ == '__main__':
 
     df = lerXML("../Data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
     df_prof = df['teachers']
-
-    semestre_atual = "2024/1"
-
     df_cargaProf = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
     df_disciplinasTurmas = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="DISCIPLINAS REGULARES", skiprows=4)
+    df_salas = pd.read_excel("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
+    df_salas = df_salas.drop(columns=["Unnamed: 0"])
 
-    teste = loadData(df_prof, "", df_disciplinasTurmas, df_cargaProf)
-    print(teste.turmas)
+    semestre_atual = input("Insira o semestre atual: ")
+
+    teste = loadData(df_prof, df_salas, df_disciplinasTurmas, df_cargaProf)
+    print(teste.professores)
 
 
