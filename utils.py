@@ -5,7 +5,7 @@ import pandas as pd
 from glob import glob
 import xml.etree.ElementTree as ET
 
-def loadData(data_professores, data_salas, data_turmas):
+def loadData(data_professores, data_salas, data_turmas, data_disciplinas):
 
     # Inicializando os dicionarios
     turmas = {}
@@ -113,10 +113,10 @@ def lerXML(arquivo):
 
 if __name__ == '__main__':
 
-    df = lerXML("")
+    df = lerXML("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
     df_prof = df['teachers']
 
-    teste = loadData(df_prof, "", "")
+    teste = loadData(df_prof, "", "", "")
     print(teste.professores)
 
 
