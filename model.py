@@ -18,21 +18,16 @@ class Turma:
     def __repr__(self):
         return str(self)
 
-        
 class Professor:
     def __init__(self, nome, matricula):
         self.matricula = matricula
         self.nome = nome
         self.disponibilidade = []
-        self.grade = {}
         self.cargaHoraria = 0
         self.disciplinas = []
 
     def setDisponibilidade(self, disponibilidade):
         self.disponibilidade = disponibilidade
-
-    def setGrade(self, grade):
-        self.grade = grade
 
     def addDisciplina(self, disciplina):
         self.disciplinas.append(disciplina)
@@ -41,7 +36,7 @@ class Professor:
         self.cargaHoraria = carga
 
     def __str__(self):
-         return f"{self.nome};{self.matricula} Carga Horaria = {self.cargaHoraria} - {self.disciplinas}\n {self.disponibilidade} \n {self.grade} \n"
+         return f"{self.nome};{self.matricula} Carga Horaria = {self.cargaHoraria} - {self.disciplinas}\n {self.disponibilidade} \n"
     
     def __repr__(self):
         return str(self)
@@ -55,10 +50,6 @@ class Sala:
         self.andar = andar
         self.id = id
         self.metodologia = metodologia
-        self.grade = {}
-
-    def setGrade(self, grade):
-        self.disponibilidade = grade
 
     def __str__(self):
          return f"{self.nome};{self.id} - Capacidade: {self.capacidade}\nTipo = {self.tipo} - Metodologia Ativa? {self.metodologia}\n {self.bloco}  {self.andar} \n"
@@ -88,7 +79,7 @@ class Disciplina:
         self.sala = sala
 
     def __str__(self):
-         return f"{self.codDisciplina};{self.nome}\nCreditos = {self.cargaHoraria} | Periodo = {self.periodo} | Tipo = {self.tipo}\nTurma = {self.turma} | Sala = {self.sala}\nProfessores = {self.professores}\n"
+         return f"{self.id}"
     
     def __repr__(self):
         return str(self)
