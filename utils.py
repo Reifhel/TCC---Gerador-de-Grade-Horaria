@@ -59,8 +59,11 @@ PADRÃO (2024.1)"""]
         # Chave de disciplina turma
         chave = f'{codigo} | {turma}'
 
-        # Criando um objeto de Disciplina
-        objDiscipina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtdEstudantes)
+        if chave in disciplinas:
+            objDiscipina = disciplinas[chave]
+        else:
+            objDiscipina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtdEstudantes)
+
         if pd.isna(disciplina["DOCENTE"]) == False:
             objDiscipina.addProf(disciplina["DOCENTE"])
 
@@ -70,14 +73,16 @@ PADRÃO (2024.1)"""]
 
 
         # Criando um objeto de turma caso não exista ou adicionando a disciplina caso exista
+        
         if turma not in turmas:
             objTurma = Turma(turma, curso, disciplina["Turno"])
-            objTurma.addDisciplina(objDiscipina)
+            if objDiscipina not in objTurma.disciplinas:
+                objTurma.addDisciplina(objDiscipina)
             objTurma.setGrade(criarGrade())
             turmas[turma] = objTurma
         elif turma in turmas:
             t = turmas[turma]
-            if chave not in t.disciplinas:
+            if objDiscipina not in t.disciplinas:
                 t.addDisciplina(objDiscipina)
             turmas[turma] = t
 
