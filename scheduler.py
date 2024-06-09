@@ -10,9 +10,9 @@ GERACOES = 100
 TAXA_MUTACAO = 0.1
 # Definição de horários por turno
 TURNOS_HORARIOS = {
-    "Manhã":    range(0, 6),        # Manhã
+    "Manhã":    range(1, 7),        # Manhã
     "Tarde":    range(7, 13),       # Tarde
-    "Noite":    range(14, 19),      # Noite 
+    "Noite":    range(14, 20),      # Noite 
     "Integral": range(0, 13)        # Integral
 }
 
@@ -23,19 +23,36 @@ def inicializar_populacao(turmas, professores, grade_professores, salas):
         for turma_id, turma in turmas.items():
             grade = criarGrade()
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
-            disciplinas = turma.disciplinas.copy()
+            
+            # Separar disciplinas por carga horária
+            disciplinas_prioritarias = [d for d in turma.disciplinas if int(d.cargaHoraria) == 6]
+            disciplinas_normais = [d for d in turma.disciplinas if int(d.cargaHoraria) != 6]
+            
+            # Combinar disciplinas prioritárias primeiro
+            disciplinas = disciplinas_prioritarias + disciplinas_normais
 
-            for i in range(len(disciplinas)):
-                rand = random.randint(0, len(disciplinas)) - 1 
-                disciplina = disciplinas.pop(rand)
-
+            for disciplina in disciplinas:
                 horarios_alocados = 0
                 carga_horaria = int(disciplina.cargaHoraria)
                 tentativas = 0
                 while horarios_alocados < carga_horaria and tentativas < 100:
                     dia = random.randint(0, 4)  # Seg a Sexta
-                    horario_inicio = random.choice(horarios_possiveis)
-                    bloco = min(2, carga_horaria - horarios_alocados)  # Alocar em blocos de 2
+
+                    primeiroHorarioDia = horarios_possiveis[0]
+
+                    if(grade[primeiroHorarioDia][dia] == None):
+                        horario_inicio = horarios_possiveis[0]
+                    else:
+                        horario_inicio = random.choice(horarios_possiveis)
+
+                    max_bloco = 6 if carga_horaria == 6 else 0
+                    if carga_horaria != 6:
+                        for h in range(len(horarios_possiveis)):
+                            if horarios_possiveis[h] in horarios_possiveis:
+                                max_bloco += 1
+                            else:
+                                break
+                    bloco = min(max_bloco, carga_horaria - horarios_alocados) 
 
                     # Ajustar bloco para respeitar o turno
                     if not all(horario_inicio + i in horarios_possiveis for i in range(bloco)):
@@ -59,7 +76,6 @@ def inicializar_populacao(turmas, professores, grade_professores, salas):
 
                     tentativas += 1
             individuo[turma_id] = grade
-        
         populacao.append(individuo)
     return populacao
 
@@ -69,23 +85,37 @@ def avaliar_aptidao(individuo, professores, salas):
     score = 0
     for turma_id, grade in individuo.items():
         for dia in range(6):
+            disciplinasDia = []
             for horario in range(20):
                 disciplina = grade[horario][dia]
+
+                # Mais de 2 disciplinas por dia
+                if disciplina:
+                    if disciplina.id not in disciplinasDia:
+                        disciplinasDia.append(disciplina.id)
+
                 if disciplina:
                     if len(disciplina.professores) > 0:
                         professor_id = disciplina.professores[0]
                         professor = professores[professor_id]
                         # Verificação de disponibilidade do professor
                         if professor.disponibilidade[horario][dia]:
-                            score += 1
+                            score += .5
                         else:
-                            score -= 1  # Penalidade por alocar professor em horário indisponível
+                            score -= .5  # Penalidade por alocar professor em horário indisponível
                     # Verificação de capacidade da sala
                     sala = random.choice(list(salas.values()))
                     if int(sala.capacidade) >= int(disciplina.qtdEstudantes):
-                        score += 1
+                        score += .5
                     else:
-                        score -= 1  # Penalidade por usar sala com capacidade insuficiente
+                        score -= .5  # Penalidade por usar sala com capacidade insuficiente
+
+                # Mais de 2 disciplinas por dia
+                if len(disciplinasDia) > 2:
+                    score -= 1
+
+            disciplinasDia = []
+     
     return score
 
 
@@ -113,6 +143,12 @@ def cruzamento(parents):
         offspring.append(child)
     return offspring
 
+def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
+    tamanho_bloco = 0
+    while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
+        tamanho_bloco += 1
+    return tamanho_bloco
+
 def mutacao(offspring, turmas):
     for individuo in offspring:
         if random.random() < TAXA_MUTACAO:
@@ -121,40 +157,49 @@ def mutacao(offspring, turmas):
             turma = turmas[turma_id]
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
             
-            # Escolher aleatoriamente dois blocos para troca
+            # Escolher aleatoriamente um dia e horário para o primeiro bloco de disciplina1
             dia1 = random.randint(0, 4)
             horario1 = random.choice(horarios_possiveis)
             disciplina1 = grade[horario1][dia1]
+            
+            # Verificar se a disciplina1 está no primeiro horário do seu bloco
+            while disciplina1 and (horario1 > 0 and grade[horario1 - 1][dia1] == disciplina1):
+                horario1 = random.choice(horarios_possiveis)
+                disciplina1 = grade[horario1][dia1]
             
             if disciplina1:
                 # Encontrar um bloco diferente para troca
                 dia2 = random.randint(0, 4)
                 horario2 = random.choice(horarios_possiveis)
-                while dia2 == dia1 and horario2 == horario1:
+                disciplina2 = grade[horario2][dia2]
+                while (dia2 == dia1 and horario2 == horario1) or (horario2 > 0 and grade[horario2 - 1][dia2] == disciplina2):
                     dia2 = random.randint(0, 4)
                     horario2 = random.choice(horarios_possiveis)
                 
-                disciplina2 = grade[horario2][dia2]
-                
                 if disciplina2:
-                    # Trocar os blocos de horário entre as disciplinas
-                    bloco1 = min(2, int(disciplina1.cargaHoraria))
-                    bloco2 = min(2, int(disciplina2.cargaHoraria))
+                    # Calcular o tamanho do bloco de cada disciplina
+                    bloco1 = calcular_tamanho_bloco(grade, horario1, dia1, disciplina1)
+                    bloco2 = calcular_tamanho_bloco(grade, horario2, dia2, disciplina2)
                     
-                    bloco1_livre = all(
-                        horario1 + i < len(grade) and grade[horario1 + i][dia1] == disciplina1 for i in range(bloco1)
-                    )
-                    bloco2_livre = all(
-                        horario2 + i < len(grade) and grade[horario2 + i][dia2] == disciplina2 for i in range(bloco2)
-                    )
-                    
-                    if bloco1_livre and bloco2_livre:
-                        # Realizar a troca
-                        for i in range(bloco1):
-                            grade[horario1 + i][dia1], grade[horario2 + i][dia2] = grade[horario2 + i][dia2], grade[horario1 + i][dia1]
+                    # Verificar se os blocos estão dentro dos limites da grade
+                    if horario1 + bloco1 <= len(horarios_possiveis) and horario2 + bloco2 <= len(horarios_possiveis):
+                        bloco1_livre = all(
+                            horario1 + i < len(horarios_possiveis) and grade[horario1 + i][dia1] == disciplina1 for i in range(bloco1)
+                        )
+                        bloco2_livre = all(
+                            horario2 + i < len(horarios_possiveis) and grade[horario2 + i][dia2] == disciplina2 for i in range(bloco2)
+                        )
+
+                        if bloco1_livre and bloco2_livre:
+                            # Realizar a troca
+                            for i in range(min(bloco1, bloco2)):
+                                t = grade[horario1 + i][dia1]
+                                grade[horario1 + i][dia1] = grade[horario2 + i][dia2]
+                                grade[horario2 + i][dia2] = t
                     
             individuo[turma_id] = grade
     return offspring
+
 
 def algoritmo_genetico(turmas, professores, grade_professores, salas):
     populacao = inicializar_populacao(turmas, professores, grade_professores, salas)
