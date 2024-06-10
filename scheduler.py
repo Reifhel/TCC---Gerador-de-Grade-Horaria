@@ -6,7 +6,7 @@ from utils import loadData, lerXML, criarGrade, display_grade
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 100
+GERACOES = 500
 TAXA_MUTACAO = 0.1
 # Definição de horários por turno
 TURNOS_HORARIOS = {
@@ -15,6 +15,12 @@ TURNOS_HORARIOS = {
     "Noite":    range(14, 20),      # Noite 
     "Integral": range(0, 13)        # Integral
 }
+
+def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
+    tamanho_bloco = 0
+    while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
+        tamanho_bloco += 1
+    return tamanho_bloco
 
 def inicializar_populacao(turmas, professores, grade_professores, salas):
     populacao = []
@@ -79,8 +85,6 @@ def inicializar_populacao(turmas, professores, grade_professores, salas):
         populacao.append(individuo)
     return populacao
 
-
-
 def avaliar_aptidao(individuo, professores, salas):
     score = 0
     for turma_id, grade in individuo.items():
@@ -118,7 +122,6 @@ def avaliar_aptidao(individuo, professores, salas):
      
     return score
 
-
 def selecao(populacao, fitness_scores):
     selected = []
     torneio_tamanho = 3
@@ -127,7 +130,6 @@ def selecao(populacao, fitness_scores):
         vencedor = max(torneio, key=lambda x: x[1])
         selected.append(vencedor[0])
     return selected
-
 
 def cruzamento(parents):
     offspring = []
@@ -142,12 +144,6 @@ def cruzamento(parents):
                 child[turma_id] = parent2[turma_id]
         offspring.append(child)
     return offspring
-
-def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
-    tamanho_bloco = 0
-    while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
-        tamanho_bloco += 1
-    return tamanho_bloco
 
 def mutacao(offspring, turmas):
     for individuo in offspring:
@@ -200,21 +196,38 @@ def mutacao(offspring, turmas):
             individuo[turma_id] = grade
     return offspring
 
-
 def algoritmo_genetico(turmas, professores, grade_professores, salas):
+    # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, grade_professores, salas)
+    
+    # Define o número de gerações para a execução do algoritmo
     for geracao in range(GERACOES):
+        # Avalia a aptidão de cada indivíduo na população
         fitness_scores = [avaliar_aptidao(individuo, professores, salas) for individuo in populacao]
+        
+        # Seleciona os pais para a próxima geração com base nas pontuações de aptidão
         parents = selecao(populacao, fitness_scores)
+        
+        # Gera descendentes através do cruzamento dos pais selecionados
         offspring = cruzamento(parents)
+        
+        # Aplica mutação nos descendentes para introduzir variabilidade
         offspring = mutacao(offspring, turmas)
+        
+        # Atualiza a população combinando pais e descendentes
         populacao = parents + offspring
+        
+        # A cada 10 gerações, imprime a melhor aptidão encontrada até o momento
         if geracao % 10 == 0:
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
+    
+    # Após todas as gerações, seleciona o melhor indivíduo da população final
     melhor_individuo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas))
+    
+    # Retorna o melhor indivíduo encontrado como solução
     return melhor_individuo
-                             
 
+                             
 def main():
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
