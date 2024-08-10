@@ -5,7 +5,7 @@ import pandas as pd
 from glob import glob
 import xml.etree.ElementTree as ET
 
-def loadData(data_professores, data_salas, data_disciplinasTurmas, carga_Professores, semestre_atual):
+def loadData(data_professores, data_salas, data_disciplinasTurmas, disponibilidade_Professores, semestre_atual):
 
     # Inicializando os dicionarios
     turmas = {}
@@ -15,33 +15,36 @@ def loadData(data_professores, data_salas, data_disciplinasTurmas, carga_Profess
 
     # Carregando dado dos professores
     for _, professor in data_professores.iterrows():
-        nome,matricula = professor['name'].split(";")
-        disponibilidade = arrumaDisponibilidade(professor['timeoff'])
+        nome = professor['DOCENTE']
+        matricula = professor['MATRÍCULA']
 
+        cargaHoraria = professor["""CONTRATO
+PADRÃO (2024.1)"""]
+        
         prof = Professor(nome, matricula)
-        prof.setDisponibilidade(disponibilidade)
-
-        if professores.get(matricula) == None:
+        prof.setCargaHoraria(cargaHoraria)
+        if professores.get(nome) == None:
             professores[nome] = prof
         else:
             pass
         
     # Adicionando a carga horaria do professor
-    for _, professor in carga_Professores.iterrows():
-        nome = professor['DOCENTE']
-        cargaHoraria = professor["""CONTRATO
-PADRÃO (2024.1)"""]
-        
-        if nome in professores:
+    for _, professor in disponibilidade_Professores.iterrows():
+        nome,matricula = professor['name'].split(";")
+        disponibilidade = arrumaDisponibilidade(professor['timeoff'])
+
+        try:    
             prof = professores[nome]
-            prof.setCargaHoraria(cargaHoraria)
+            prof.setDisponibilidade(disponibilidade)
             professores[nome] = prof
+        except:
+            pass
 
     # Populando as disciplinas e turmas
     for _, disciplina in data_disciplinasTurmas.iterrows():
 
         turno = siglaTurno(disciplina["Turno"])
-        siglaCurso = disciplina["Grade Curricular"].split(" ")[0]
+        siglaCurso = str(disciplina["Grade Curricular"]).split(" ")[0]
         # Colocando a turma no formato
         turma = f'{siglaCurso} - {disciplina["Período"]}{disciplina["Turma"]} - {turno} - {semestre_atual}'
 
@@ -65,17 +68,29 @@ PADRÃO (2024.1)"""]
             objDiscipina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtdEstudantes)
 
         if pd.isna(disciplina["DOCENTE"]) == False:
-            objDiscipina.addProf(disciplina["DOCENTE"])
 
-            prof = professores[disciplina["DOCENTE"]]
-            prof.addDisciplina(chave)
-            professores[disciplina["DOCENTE"]] = prof
+            splited = disciplina["DOCENTE"].split(";")
+
+            for i in range(len(splited)):
+                profes = splited[i].strip()
+                if profes == "Elisangela F. Manffra":
+                    profes = "ELISANGELA FERRETTI MANFFRA"
+                objDiscipina.addProf(profes)
+                try:
+                    prof = professores[profes]
+                    prof.addDisciplina(chave)
+                    professores[profes] = prof
+                except: 
+                    print("Não achou")
 
 
         # Criando um objeto de turma caso não exista ou adicionando a disciplina caso exista
         
         if turma not in turmas:
-            objTurma = Turma(turma, curso, disciplina["Turno"])
+            turno = disciplina["Turno"]
+            if pd.isna(disciplina["Turno"]) == True:
+                turno = "Manhã"
+            objTurma = Turma(turma, curso, turno)
             if objDiscipina not in objTurma.disciplinas:
                 objTurma.addDisciplina(objDiscipina)
             objTurma.setGrade(criarGrade())

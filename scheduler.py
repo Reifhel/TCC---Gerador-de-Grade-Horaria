@@ -1,19 +1,22 @@
 import random
 import json
 import pandas as pd
+import glob
+import os
 from model import Data, Disciplina, Professor, Sala, Turma
 from utils import loadData, lerXML, criarGrade, display_grade
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 500
-TAXA_MUTACAO = 0.1
+GERACOES = 100
+TAXA_MUTACAO = 0.7
 # Definição de horários por turno
 TURNOS_HORARIOS = {
     "Manhã":    range(1, 7),        # Manhã
     "Tarde":    range(7, 13),       # Tarde
     "Noite":    range(14, 20),      # Noite 
-    "Integral": range(0, 13)        # Integral
+    "Integral": range(0, 13),        # Integral
+    "nan": range(0,20)
 }
 
 def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
@@ -22,10 +25,11 @@ def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
         tamanho_bloco += 1
     return tamanho_bloco
 
-def inicializar_populacao(turmas, professores, grade_professores, salas):
+def inicializar_populacao(turmas, professores, salas):
     populacao = []
     for _ in range(POPULACAO_TAMANHO):
         individuo = {}
+        grade_professores = {}
         for turma_id, turma in turmas.items():
             grade = criarGrade()
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
@@ -72,20 +76,21 @@ def inicializar_populacao(turmas, professores, grade_professores, salas):
                             grade[horario_inicio + i][dia] = disciplina
                         horarios_alocados += bloco
 
-                        # Alocar na grade do professor
+                        #Alocar na grade do professor
                         for professor in disciplina.professores:
-                            matricula_professor = professores[professor].matricula
-                            if matricula_professor not in grade_professores:
-                                grade_professores[matricula_professor] = criarGrade()
+                            nome_professor = professores[professor].nome
+                            if nome_professor not in grade_professores:
+                                grade_professores[nome_professor] = criarGrade()
                             for i in range(bloco):
-                                grade_professores[matricula_professor][horario_inicio + i][dia] = disciplina
+                                grade_professores[nome_professor][horario_inicio + i][dia] = disciplina
 
                     tentativas += 1
             individuo[turma_id] = grade
-        populacao.append(individuo)
+        populacao.append({'Individuo': individuo, 'Grade Professor': grade_professores})
     return populacao
 
-def avaliar_aptidao(individuo, professores, salas):
+def avaliar_aptidao(populacao, professores, salas):
+    individuo = populacao.get('Individuo')
     score = 0
     for turma_id, grade in individuo.items():
         for dia in range(6):
@@ -146,7 +151,9 @@ def cruzamento(parents):
     return offspring
 
 def mutacao(offspring, turmas):
-    for individuo in offspring:
+    for populacao in offspring:
+        individuo = populacao.get('Individuo')
+        grade_professores = populacao.get('Grade Professor')
         if random.random() < TAXA_MUTACAO:
             turma_id = random.choice(list(individuo.keys()))
             grade = individuo[turma_id]
@@ -187,18 +194,44 @@ def mutacao(offspring, turmas):
                         )
 
                         if bloco1_livre and bloco2_livre:
-                            # Realizar a troca
-                            for i in range(min(bloco1, bloco2)):
-                                t = grade[horario1 + i][dia1]
-                                grade[horario1 + i][dia1] = grade[horario2 + i][dia2]
-                                grade[horario2 + i][dia2] = t
+                            # Verificar disponibilidade de todos os professores de disciplina1 nos novos horários
+                            professor1_disponivel = all(
+                                all(grade_professores[professor][horario2 + i][dia2] is None 
+                                    for i in range(bloco1))
+                                for professor in disciplina1.professores
+                            )
+                            # Verificar disponibilidade de todos os professores de disciplina2 nos novos horários
+                            professor2_disponivel = all(
+                                all(grade_professores[professor][horario1 + i][dia1] is None 
+                                    for i in range(bloco2))
+                                for professor in disciplina2.professores
+                            )
+
+                            if professor1_disponivel and professor2_disponivel:
+                                # Realizar a troca
+                                
+                                for i in range(min(bloco1, bloco2)):
+                                    t = grade[horario1 + i][dia1]
+                                    grade[horario1 + i][dia1] = grade[horario2 + i][dia2]
+                                    grade[horario2 + i][dia2] = t
+
+                                    # Atualizar a grade dos professores usando o nome dos professores
+                                    for professor in disciplina1.professores:
+                                        grade_professores[professor][horario1 + i][dia1] = None
+                                        grade_professores[professor][horario2 + i][dia2] = disciplina1
+
+                                    for professor in disciplina2.professores:
+                                        grade_professores[professor][horario2 + i][dia2] = None
+                                        grade_professores[professor][horario1 + i][dia1] = disciplina2
                     
             individuo[turma_id] = grade
     return offspring
 
-def algoritmo_genetico(turmas, professores, grade_professores, salas):
+
+
+def algoritmo_genetico(turmas, professores, salas):
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
-    populacao = inicializar_populacao(turmas, professores, grade_professores, salas)
+    populacao = inicializar_populacao(turmas, professores, salas)
     
     # Define o número de gerações para a execução do algoritmo
     for geracao in range(GERACOES):
@@ -222,10 +255,12 @@ def algoritmo_genetico(turmas, professores, grade_professores, salas):
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
     
     # Após todas as gerações, seleciona o melhor indivíduo da população final
-    melhor_individuo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas))
+    melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas))
+    melhor_individuo = melhor_alvo.get('Individuo')
+    grade_professores = melhor_alvo.get('Grade Professor')
     
     # Retorna o melhor indivíduo encontrado como solução
-    return melhor_individuo
+    return melhor_individuo, grade_professores
 
                              
 def main():
@@ -233,22 +268,36 @@ def main():
         horarios = json.load(f)
 
     df = lerXML("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
-    df_prof = df['teachers']
-    df_cargaProf = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
-    df_disciplinasTurmas = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="DISCIPLINAS REGULARES", skiprows=4)
+    df_dispo_profes = df['teachers']
     df_salas = pd.read_excel("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
     df_salas = df_salas.drop(columns=["Unnamed: 0"])
 
+    all_files = glob.glob(os.path.join("../Data/politecnica/" , "*.xlsm"))
+
+    print(all_files)
+
+    lit = []
+
+    for filename in all_files:
+        df_t = pd.read_excel(filename, sheet_name="DISCIPLINAS REGULARES", skiprows=4)
+        lit.append(df_t)
+
+    df_turmas = pd.concat(lit, axis=0, ignore_index=True)
+    df_turmas = df_turmas.dropna(thresh=6)
+    df_turmas = df_turmas.rename(columns={'DOCENTE 2024.2\nConsulte aqui\n\n(possível fazer seleção múltipla)':"DOCENTE", "Previsão de número de estudantes": 'qtdEstudantes'})
+
+    df_prof = pd.read_excel("../Data/Planilha_Geral_Professores.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
+
     semestre_atual = "2024/1"
-    data = loadData(df_prof, df_salas, df_disciplinasTurmas, df_cargaProf, semestre_atual)
+    data = loadData(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
 
-    grade_professores = {}
+    melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas)
 
-    melhor_individuo = algoritmo_genetico(data.turmas, data.professores, grade_professores, data.salas)
     for turma_id, grade in melhor_individuo.items():
         print(f"Turma: {turma_id}")
         display_grade(grade, horarios)
         print(data.turmas[turma_id].disciplinas)
+
 
 
 if __name__ == "__main__":
