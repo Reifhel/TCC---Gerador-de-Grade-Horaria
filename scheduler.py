@@ -27,9 +27,16 @@ def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
 
 def inicializar_populacao(turmas, professores, salas):
     populacao = []
+
     for _ in range(POPULACAO_TAMANHO):
         individuo = {}
         grade_professores = {}
+
+        for professor in professores.items():
+            nome_professor = professor[0]
+            if nome_professor not in grade_professores:
+                grade_professores[nome_professor] = criarGrade()
+
         for turma_id, turma in turmas.items():
             grade = criarGrade()
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
@@ -41,6 +48,7 @@ def inicializar_populacao(turmas, professores, salas):
             # Combinar disciplinas prioritárias primeiro
             disciplinas = disciplinas_prioritarias + disciplinas_normais
 
+            # Para cada Disciplina da Turma
             for disciplina in disciplinas:
                 horarios_alocados = 0
                 carga_horaria = int(disciplina.cargaHoraria)
@@ -72,17 +80,25 @@ def inicializar_populacao(turmas, professores, salas):
                     bloco_livre = all(grade[horario_inicio + i][dia] is None for i in range(bloco))
 
                     if bloco_livre:
-                        for i in range(bloco):
-                            grade[horario_inicio + i][dia] = disciplina
-                        horarios_alocados += bloco
-
-                        #Alocar na grade do professor
-                        for professor in disciplina.professores:
-                            nome_professor = professores[professor].nome
-                            if nome_professor not in grade_professores:
-                                grade_professores[nome_professor] = criarGrade()
+                        # Verificando se os professores estão livres nesse horário também
+                        professor_disponivel = all(
+                            all(grade_professores[professor][horario_inicio + i][dia] is None 
+                                for i in range(bloco))
+                            for professor in disciplina.professores
+                        )
+                        
+                        # caso esteja
+                        if professor_disponivel:
+                            # Aloca o bloco na disciplina
                             for i in range(bloco):
-                                grade_professores[nome_professor][horario_inicio + i][dia] = disciplina
+                                grade[horario_inicio + i][dia] = disciplina
+                            horarios_alocados += bloco
+
+                            #Alocar na grade do professor
+                            for professor in disciplina.professores:
+                                nome_professor = professores[professor].nome
+                                for i in range(bloco):
+                                    grade_professores[nome_professor][horario_inicio + i][dia] = disciplina
 
                     tentativas += 1
             individuo[turma_id] = grade
@@ -293,10 +309,18 @@ def main():
 
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas)
 
-    for turma_id, grade in melhor_individuo.items():
-        print(f"Turma: {turma_id}")
-        display_grade(grade, horarios)
-        print(data.turmas[turma_id].disciplinas)
+    prof = grade_professores.get("ANDREY CABRAL MEIRA")
+    teste1 = melhor_individuo.get("CCCO - 2.0A - M - 2024/1")
+    teste2 = melhor_individuo.get("CCCO - 2.0B - M - 2024/1")
+    display_grade(prof, horarios)
+
+    display_grade(teste1, horarios)
+    display_grade(teste2, horarios)
+
+    # for turma_id, grade in melhor_individuo.items():
+    #     print(f"Turma: {turma_id}")
+    #     display_grade(grade, horarios)
+    #     print(data.turmas[turma_id].disciplinas)
 
 
 
