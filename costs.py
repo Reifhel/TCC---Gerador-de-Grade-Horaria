@@ -14,15 +14,15 @@ def custo_professores(grade_professores, data_professores):
                 # Verificação de Disponibilidades
                 if len(professor.disponibilidade) > 0:
                     # Verificando se tem uma disciplina no horário e está alocando em horário que professor tem disponiblidade
-                    if grade[horario][dia] != None and (professor.disponibilidade[horario][dia] == True):
+                    if grade[horario][dia] is not None and (professor.disponibilidade[horario][dia] is True):
                         custo_total += .5
                     # Verificando se tem uma disciplina no horário e está alocando em horário que professor não tem disponiblidade
-                    elif grade[horario][dia] != None and (professor.disponibilidade[horario][dia] == False):
+                    elif grade[horario][dia] is not None and (professor.disponibilidade[horario][dia] is False):
                         custo_total -= .5  # Penalidade por alocar professor em horário indisponível
                     else:
                         pass
 
-                if grade[horario][dia] != None:
+                if grade[horario][dia] is not None:
                     contagem_horas_aula += 1
 
             # No máximo 8 horas aula por dia
@@ -36,20 +36,20 @@ def custo_indiviuo(individuo):
 
     for turma_id, grade in individuo.items():
         for dia in range(6):
-            disciplinasDia = []
+            disciplina_dia = []
             for horario in range(20):
                 disciplina = grade[horario][dia]
 
                 # Mais de 2 disciplinas por dia
                 if disciplina:
-                    if disciplina.id not in disciplinasDia:
-                        disciplinasDia.append(disciplina.id)
+                    if disciplina.id not in disciplina_dia:
+                        disciplina_dia.append(disciplina.id)
 
                 # Mais de 2 disciplinas por dia
-                if len(disciplinasDia) > 2:
+                if len(disciplina_dia) > 2:
                     custo_total -= 1
 
-            disciplinasDia = []
+            disciplina_dia = []
 
 
     return custo_total

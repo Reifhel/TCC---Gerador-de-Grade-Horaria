@@ -1,0 +1,7 @@
+./gerador_grade
+
+./.mypy_cache
+
+./__pycache__
+
+commands.txt

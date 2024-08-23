@@ -1,0 +1,7 @@
+[MASTER]
+# Define o tamanho máximo de linha para 180 caracteres
+max-line-length=180
+
+# Desabilita a verificação de erro de import
+disable=import-error, too-many-arguments, wrong-import-order, wrong-import-position, broad-exception-caught
+ignore=
