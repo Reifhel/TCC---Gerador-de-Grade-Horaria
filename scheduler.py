@@ -4,7 +4,8 @@ import pandas as pd
 import glob
 import os
 from model import Data, Disciplina, Professor, Sala, Turma
-from utils import loadData, lerXML, criarGrade, display_grade
+from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
+from costs import *
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
@@ -19,12 +20,6 @@ TURNOS_HORARIOS = {
     "nan": range(0,20)
 }
 
-def calcular_tamanho_bloco(grade, horario_inicio, dia, disciplina):
-    tamanho_bloco = 0
-    while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
-        tamanho_bloco += 1
-    return tamanho_bloco
-
 def inicializar_populacao(turmas, professores, salas):
     populacao = []
 
@@ -32,13 +27,14 @@ def inicializar_populacao(turmas, professores, salas):
         individuo = {}
         grade_professores = {}
 
+        # Criando uma grade para cada professor para a população
         for professor in professores.items():
             nome_professor = professor[0]
             if nome_professor not in grade_professores:
-                grade_professores[nome_professor] = criarGrade()
+                grade_professores[nome_professor] = criar_grade()
 
         for turma_id, turma in turmas.items():
-            grade = criarGrade()
+            grade = criar_grade()
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
             
             # Separar disciplinas por carga horária
@@ -107,40 +103,12 @@ def inicializar_populacao(turmas, professores, salas):
 
 def avaliar_aptidao(populacao, professores, salas):
     individuo = populacao.get('Individuo')
+    grade_professores = populacao.get('Grade Professor')
     score = 0
-    for turma_id, grade in individuo.items():
-        for dia in range(6):
-            disciplinasDia = []
-            for horario in range(20):
-                disciplina = grade[horario][dia]
+    
+    score += custo_indiviuo(individuo)
+    score += custo_professores(grade_professores, professores)
 
-                # Mais de 2 disciplinas por dia
-                if disciplina:
-                    if disciplina.id not in disciplinasDia:
-                        disciplinasDia.append(disciplina.id)
-
-                if disciplina:
-                    if len(disciplina.professores) > 0:
-                        professor_id = disciplina.professores[0]
-                        professor = professores[professor_id]
-                        # Verificação de disponibilidade do professor
-                        if professor.disponibilidade[horario][dia]:
-                            score += .5
-                        else:
-                            score -= .5  # Penalidade por alocar professor em horário indisponível
-                    # Verificação de capacidade da sala
-                    sala = random.choice(list(salas.values()))
-                    if int(sala.capacidade) >= int(disciplina.qtdEstudantes):
-                        score += .5
-                    else:
-                        score -= .5  # Penalidade por usar sala com capacidade insuficiente
-
-                # Mais de 2 disciplinas por dia
-                if len(disciplinasDia) > 2:
-                    score -= 1
-
-            disciplinasDia = []
-     
     return score
 
 def selecao(populacao, fitness_scores):
@@ -158,12 +126,40 @@ def cruzamento(parents):
         parent1 = random.choice(parents)
         parent2 = random.choice(parents)
         child = {}
-        for turma_id in parent1:
-            if random.random() > 0.5:
-                child[turma_id] = parent1[turma_id]
-            else:
-                child[turma_id] = parent2[turma_id]
-        offspring.append(child)
+        grade_professores_child = {}
+
+        # Inicializa a grade de professores do filho
+        for professor in parent1['Grade Professor']:
+            grade_professores_child[professor] = [row[:] for row in parent1['Grade Professor'][professor]]
+
+        # Para cada turma, processamos as disciplinas em grupos
+        for turma_id in parent1['Individuo']:
+            turma_parent1 = parent1['Individuo'][turma_id]
+            turma_parent2 = parent2['Individuo'][turma_id]
+
+            # Inicializar a grade da turma no filho
+            child[turma_id] = [[None for _ in range(len(turma_parent1[0]))] for _ in range(len(turma_parent1))]
+
+            for dia in range(len(turma_parent1)):
+                for horario in range(len(turma_parent1[dia])):
+                    disciplina1 = turma_parent1[dia][horario]
+                    disciplina2 = turma_parent2[dia][horario]
+
+                    # Decide de qual pai vai herdar o grupo de disciplinas
+                    if disciplina1 and random.random() > 0.5:
+                        child[turma_id][dia][horario] = disciplina1
+                        for professor in disciplina1.professores:  # Atualiza todos os professores da disciplina
+                            grade_professores_child[professor][dia][horario] = disciplina1
+                    elif disciplina2:
+                        child[turma_id][dia][horario] = disciplina2
+                        for professor in disciplina2.professores:  # Atualiza todos os professores da disciplina
+                            grade_professores_child[professor][dia][horario] = disciplina2
+
+        offspring.append({
+            'Individuo': child,
+            'Grade Professor': grade_professores_child
+        })
+
     return offspring
 
 def mutacao(offspring, turmas):
@@ -243,8 +239,6 @@ def mutacao(offspring, turmas):
             individuo[turma_id] = grade
     return offspring
 
-
-
 def algoritmo_genetico(turmas, professores, salas):
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
@@ -283,7 +277,7 @@ def main():
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
-    df = lerXML("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
+    df = ler_XML("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
     df_dispo_profes = df['teachers']
     df_salas = pd.read_excel("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
     df_salas = df_salas.drop(columns=["Unnamed: 0"])
@@ -304,24 +298,29 @@ def main():
 
     df_prof = pd.read_excel("../Data/Planilha_Geral_Professores.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
 
-    semestre_atual = "2024/1"
-    data = loadData(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
+    semestre_atual = "2024/2"
+    data = load_data(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
 
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas)
 
+    # TESTES
     prof = grade_professores.get("ANDREY CABRAL MEIRA")
-    teste1 = melhor_individuo.get("CCCO - 2.0A - M - 2024/1")
-    teste2 = melhor_individuo.get("CCCO - 2.0B - M - 2024/1")
-    display_grade(prof, horarios)
+    teste1 = melhor_individuo.get("CCCO - 2.0A - M - 2024/2")
+    teste2 = melhor_individuo.get("CCCO - 2.0B - M - 2024/2")
+    teste3 = melhor_individuo.get("CCCO - 3.0U - M - 2024/2")
+    teste4 = melhor_individuo.get("CCCO - 1.0U - M - 2024/2")
 
     display_grade(teste1, horarios)
     display_grade(teste2, horarios)
+    display_grade(teste3, horarios)
+    display_grade(teste4, horarios)
+
+    display_grade(prof, horarios)
 
     # for turma_id, grade in melhor_individuo.items():
     #     print(f"Turma: {turma_id}")
     #     display_grade(grade, horarios)
     #     print(data.turmas[turma_id].disciplinas)
-
 
 
 if __name__ == "__main__":

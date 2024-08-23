@@ -1,5 +1,14 @@
 class Turma:
-    def __init__(self, id, curso, turno):
+    """Objeto de Turma"""
+
+    def __init__(self, id: str, curso: str, turno: str):
+        """Iniciador do objeto Turma
+
+        Args:
+            id (str): Identificador da turma, EX: CCCO - 4.0U - N - 2024/1
+            curso (str): Nome do curso
+            turno (str): Turno da turma (Manhã, tarde, noite ou integral)
+        """
         self.id = id
         self.curso = curso
         self.grade = {}
@@ -9,8 +18,13 @@ class Turma:
     def setGrade(self, grade):
         self.grade = grade
 
-    def addDisciplina(self, disciplina):
-        self.disciplinas.append(disciplina)
+    def addDisciplina(self, disc: object):
+        """Adiciona uma disciplina ao Array de disciplinas do professor
+
+        Args:
+            disc (object): Objeto da classe Disciplina
+        """
+        self.disciplinas.append(disc)
 
     def __str__(self):
          return f"{self.id} - {self.curso} - {self.turno}\n{self.disciplinas}\n{self.grade}\n"
@@ -85,7 +99,18 @@ class Disciplina:
         return str(self)
 
 class Data:
-    def __init__(self, turmas, professores, salas, disciplinas):
+    """
+    Objeto de controle de dados para guardar os dados de turmas, professores, salas e disciplinas
+    """
+    def __init__(self, turmas: dict, professores: dict, salas: dict, disciplinas: dict):
+        """Iniciador do objeto de controle
+        
+        Args:
+            turmas (dict): Dicionário com todos os objetos de turmas
+            professores (dict): Dicionário com todos os objetos de professores
+            salas (dict): Dicionário com todos os objetos de salas
+            disciplinas (dict): Dicionário com todos os objetos de disciplinas
+        """
         self.turmas = turmas
         self.professores = professores
         self.salas = salas
