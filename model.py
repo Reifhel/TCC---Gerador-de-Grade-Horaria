@@ -147,7 +147,6 @@ class Disciplina:
         self.nome = nome
         self.cod_disciplina = cod_disciplina
         self.professores: list[Professor] = []
-        self.sala
         self.periodo = periodo
         self.turma = turma
         self.tipo = tipo

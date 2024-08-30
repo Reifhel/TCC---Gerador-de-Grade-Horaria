@@ -1,12 +1,10 @@
 from model import Data, Disciplina, Professor, Sala, Turma
 
-import json
 import pandas as pd
-from glob import glob
 import xml.etree.ElementTree as ET
 
 
-def load_data(data_professores, data_salas, data_disciplinasTurmas, disponibilidade_Professores, semestre_atual) -> Data:
+def load_data(data_professores: pd.DataFrame, data_salas: pd.DataFrame, data_disciplinasTurmas: pd.DataFrame, disponibilidade_Professores: pd.DataFrame, semestre_atual: str) -> Data:
 
     # Inicializando os dicionarios
     turmas: dict[str, Turma] = {}
@@ -274,27 +272,3 @@ def calcular_tamanho_bloco(grade: list, horario_inicio: int, dia: int, disciplin
     while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
         tamanho_bloco += 1
     return tamanho_bloco
-
-
-if __name__ == '__main__':
-
-    df = ler_XML("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
-    df_prof = df['teachers']
-    df_cargaProf = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="CONSULTA - Professores", skiprows=8)
-    df_disciplinasTurmas = pd.read_excel("../Data/Planilha de Turmas 2024.2_Ciência da Computação.xlsm", sheet_name="DISCIPLINAS REGULARES", skiprows=4)
-    df_salas = pd.read_excel("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
-    df_salas = df_salas.drop(columns=["Unnamed: 0"])
-
-    semestre_atual = "2024/1"
-
-    teste = load_data(df_prof, df_salas, df_disciplinasTurmas, df_cargaProf, semestre_atual)
-
-    matriz_teste = teste.turmas
-
-    print(matriz_teste)
-
-    # Carregar a lista de horários
-    # with open('../Data/horarios.json', 'r') as f:
-    #     horarios = json.load(f)
-
-    # display_grade(matriz_teste, horarios)

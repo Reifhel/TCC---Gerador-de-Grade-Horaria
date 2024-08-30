@@ -5,7 +5,7 @@ import glob
 import os
 from model import Data, Disciplina, Professor, Sala, Turma
 from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
-from costs import *
+from costs import pontuacao_indiviuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
@@ -21,7 +21,17 @@ TURNOS_HORARIOS = {
 }
 
 
-def inicializar_populacao(turmas, professores, salas):
+def inicializar_populacao(turmas: dict, professores: dict, salas: dict) -> list[dict]:
+    """Função inicial do algoritmo genético onde geramos uma população inicial pseudo-aleatória
+
+    Args:
+        turmas (dict): Dicionário que contem os objetos de Turma
+        professores (dict): Dicionário que contem os objetos de Professor
+        salas (dict): Dicionário que contem os objetos de Salas
+
+    Returns:
+        list[dict]: Lista com dicionários de Individuos (Turmass) e Grade Professores
+    """
     populacao = []
 
     for _ in range(POPULACAO_TAMANHO):
@@ -107,18 +117,38 @@ def inicializar_populacao(turmas, professores, salas):
     return populacao
 
 
-def avaliar_aptidao(populacao, professores, salas):
+def avaliar_aptidao(populacao: dict, professores: dict, salas: dict) -> float:
+    """Função com o objetivo de avaliar a aptidão da população atráves de diversas restrições impostas ao conjunto
+
+    Args:
+        populacao (dict): Dicionário que contem as grades tanto para individuos (Turmas) quanto para Professores
+        professores (dict): Dicionário que contem os objetos de professores
+        salas (dict): Dicionário que contem os objetos de salas
+
+    Returns:
+        float: Pontuação total obtida ao longo das restrições
+    """
+
     individuo = populacao.get('Individuo')
     grade_professores = populacao.get('Grade Professor')
-    score = 0
+    score = 0.0
 
-    score += custo_indiviuo(individuo)
-    score += custo_professores(grade_professores, professores)
+    score += pontuacao_indiviuo(individuo)
+    score += pontuacao_professores(grade_professores, professores)
 
     return score
 
 
-def selecao(populacao, fitness_scores):
+def selecao(populacao: list[dict], fitness_scores: list) -> list:
+    """Função que faz a seleção de individuos pelo metodo de torneio, selecionando 3 individuos
+
+    Args:
+        populacao (list[dict]): list de dicionário com os individuos
+        fitness_scores (list): Pontuação por individuo
+
+    Returns:
+        list: Retorna a lista de individuos selecionados
+    """
     selected = []
     torneio_tamanho = 3
     for _ in range(POPULACAO_TAMANHO):
@@ -129,7 +159,16 @@ def selecao(populacao, fitness_scores):
     return selected
 
 
-def cruzamento(parents):
+def cruzamento(parents: list) -> list[dict]:
+    """
+    Função com o objetivo de mesclar as "caracteristicas" dos pais para assim gerar uma grade completamente nova
+
+    Args:
+        parents (list): List de individuos dos quais serão extraidos os dados
+
+    Returns:
+        list[dict]: retorna uma lista de dicionário {"Individuo": child, "Grade Professor": grade_professores_child}
+    """
     offspring = []
     for _ in range(len(parents) // 2):
         parent1 = random.choice(parents)
@@ -174,7 +213,17 @@ def cruzamento(parents):
     return offspring
 
 
-def mutacao(offspring, turmas):
+def mutacao(offspring: list[dict], turmas: dict) -> list[dict]:
+    """
+    Função que de forma aleatória dependendo da TAXA_MUTACAO transforma a grade do individuo
+
+    Args:
+        offspring (list[dict]): Lista de Individuos após o cruzamento entre os pais
+        turmas (dict): Dicionário de Objetos de Turma para suporte
+
+    Returns:
+        list[dict]: Retorno a população mutacionada
+    """
     for populacao in offspring:
         individuo = populacao.get('Individuo')
         grade_professores = populacao.get('Grade Professor')
@@ -254,15 +303,26 @@ def mutacao(offspring, turmas):
     return offspring
 
 
-def algoritmo_genetico(turmas, professores, salas):
+def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professor], salas: dict[str, Sala]):
+    """
+    Função do algoritmo genético que atráves dos dados de entrada encontrada o melhor caso com base nas restrições
+
+    Args:
+        turmas (dict[str, Turma]): Dicionário com Objetos de Turmas
+        professores (dict[str, Professor]): Dicionário com Objetos de Professores
+        salas (dict[str, Sala]): Dicionário com Objetos de Salas
+
+    Returns:
+        dict[str, Turma]: Dicionário composto pela melhor população encontrada
+        dict[str, Professor]: Dicionário composto pela grade horaria dos professores para a melhor população encontrada
+    """
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
 
     # Define o número de gerações para a execução do algoritmo
     for geracao in range(GERACOES):
         # Avalia a aptidão de cada indivíduo na população
-        fitness_scores = [avaliar_aptidao(
-            individuo, professores, salas) for individuo in populacao]
+        fitness_scores = [avaliar_aptidao(individuo, professores, salas) for individuo in populacao]
 
         # Seleciona os pais para a próxima geração com base nas pontuações de aptidão
         parents = selecao(populacao, fitness_scores)
@@ -289,7 +349,7 @@ def algoritmo_genetico(turmas, professores, salas):
     return melhor_individuo, grade_professores
 
 
-def main():
+def main() -> None:
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
