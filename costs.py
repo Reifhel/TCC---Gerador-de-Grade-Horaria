@@ -1,5 +1,14 @@
-def custo_professores(grade_professores, data_professores):
-    custo_total = 0
+def pontuacao_professores(grade_professores: dict, data_professores: dict) -> float:
+    """Função para gerar a pontuação do professor pelas restrições impostas
+
+    Args:
+        grade_professores (dict): Dicionário composto por nome e grade {"Professor": [[]], ...}
+        data_professores (dict): Dicionário que contem os dados de cada professor
+
+    Returns:
+        float: Pontuação alcançada ao passar pelas restrições
+    """
+    score = 0.0
 
     for nome_professor, grade in grade_professores.items():
         for dia in range(6):
@@ -14,46 +23,64 @@ def custo_professores(grade_professores, data_professores):
                 # Verificação de Disponibilidades
                 if len(professor.disponibilidade) > 0:
                     # Verificando se tem uma disciplina no horário e está alocando em horário que professor tem disponiblidade
-                    if grade[horario][dia] != None and (professor.disponibilidade[horario][dia] == True):
-                        custo_total += .5
+                    if grade[horario][dia] is not None and (professor.disponibilidade[horario][dia] is True):
+                        score += .5
                     # Verificando se tem uma disciplina no horário e está alocando em horário que professor não tem disponiblidade
-                    elif grade[horario][dia] != None and (professor.disponibilidade[horario][dia] == False):
-                        custo_total -= .5  # Penalidade por alocar professor em horário indisponível
+                    elif grade[horario][dia] is not None and (professor.disponibilidade[horario][dia] is False):
+                        score -= .5  # Penalidade por alocar professor em horário indisponível
                     else:
                         pass
 
-                if grade[horario][dia] != None:
+                if grade[horario][dia] is not None:
                     contagem_horas_aula += 1
 
             # No máximo 8 horas aula por dia
             if contagem_horas_aula > 8:
-                custo_total -= 1
+                score -= 1
 
-    return custo_total
+    return score
 
-def custo_indiviuo(individuo):
-    custo_total = 0
+
+def pontuacao_indiviuo(individuo: dict) -> float:
+    """Função para gerar a pontuação do indivuduo (turma) pelas restrições impostas
+
+    Args:
+        individuo (dict): Dicionário composto por chave da turma e grade
+
+    Returns:
+        float: Pontuação alcançada ao passar pelas restrições
+    """
+    score = 0.0
 
     for turma_id, grade in individuo.items():
         for dia in range(6):
-            disciplinasDia = []
+            disciplina_dia = []
             for horario in range(20):
                 disciplina = grade[horario][dia]
 
                 # Mais de 2 disciplinas por dia
                 if disciplina:
-                    if disciplina.id not in disciplinasDia:
-                        disciplinasDia.append(disciplina.id)
+                    if disciplina.id not in disciplina_dia:
+                        disciplina_dia.append(disciplina.id)
 
                 # Mais de 2 disciplinas por dia
-                if len(disciplinasDia) > 2:
-                    custo_total -= 1
+                if len(disciplina_dia) > 2:
+                    score -= 1
 
-            disciplinasDia = []
+            disciplina_dia = []
+
+    return score
 
 
-    return custo_total
+def pontuacao_salas(salas: dict) -> float:
+    """Função para calcular a pontuação das turmas ao decorrer das restrições
 
-def custo_sala(salas):
-    return
+    Args:
+        salas (dict): Dicionário composto pela chave sendo o identificador de sala e sua grade
 
+    Returns:
+        float: Pontuação alcançada ao passar pelas restrições
+    """
+    score = 0.0
+
+    return score
