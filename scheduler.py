@@ -62,7 +62,7 @@ def inicializar_populacao(turmas: dict, professores: dict, salas: dict) -> list[
                 horarios_alocados = 0
                 carga_horaria = int(disciplina.carga_horaria)
                 tentativas = 0
-                while horarios_alocados < carga_horaria and tentativas < 100:
+                while horarios_alocados < carga_horaria and tentativas < 300:
                     dia = random.randint(0, 4)  # Seg a Sexta
 
                     primeiroHorarioDia = horarios_possiveis[0]
@@ -117,7 +117,7 @@ def inicializar_populacao(turmas: dict, professores: dict, salas: dict) -> list[
     return populacao
 
 
-def avaliar_aptidao(populacao: dict, professores: dict, salas: dict) -> float:
+def avaliar_aptidao(populacao: dict, professores: dict, salas: dict, horarios: dict) -> float:
     """Função com o objetivo de avaliar a aptidão da população atráves de diversas restrições impostas ao conjunto
 
     Args:
@@ -134,7 +134,7 @@ def avaliar_aptidao(populacao: dict, professores: dict, salas: dict) -> float:
     score = 0.0
 
     score += pontuacao_indiviuo(individuo)
-    score += pontuacao_professores(grade_professores, professores)
+    score += pontuacao_professores(grade_professores, professores, horarios)
 
     return score
 
@@ -150,7 +150,7 @@ def selecao(populacao: list[dict], fitness_scores: list) -> list:
         list: Retorna a lista de individuos selecionados
     """
     selected = []
-    torneio_tamanho = 3
+    torneio_tamanho = 5
     for _ in range(POPULACAO_TAMANHO):
         torneio = random.sample(
             list(zip(populacao, fitness_scores)), torneio_tamanho)
@@ -303,7 +303,7 @@ def mutacao(offspring: list[dict], turmas: dict) -> list[dict]:
     return offspring
 
 
-def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professor], salas: dict[str, Sala]):
+def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professor], salas: dict[str, Sala], horarios: dict):
     """
     Função do algoritmo genético que atráves dos dados de entrada encontrada o melhor caso com base nas restrições
 
@@ -322,7 +322,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
     # Define o número de gerações para a execução do algoritmo
     for geracao in range(GERACOES):
         # Avalia a aptidão de cada indivíduo na população
-        fitness_scores = [avaliar_aptidao(individuo, professores, salas) for individuo in populacao]
+        fitness_scores = [avaliar_aptidao(individuo, professores, salas, horarios) for individuo in populacao]
 
         # Seleciona os pais para a próxima geração com base nas pontuações de aptidão
         parents = selecao(populacao, fitness_scores)
@@ -341,7 +341,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
 
     # Após todas as gerações, seleciona o melhor indivíduo da população final
-    melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas))
+    melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas, horarios))
     melhor_individuo = melhor_alvo.get('Individuo')
     grade_professores = melhor_alvo.get('Grade Professor')
 
@@ -383,8 +383,7 @@ def main() -> None:
     data = load_data(df_prof, df_salas, df_turmas,
                      df_dispo_profes, semestre_atual)
 
-    melhor_individuo, grade_professores = algoritmo_genetico(
-        data.turmas, data.professores, data.salas)
+    melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas, horarios)
 
     # TESTES
     prof = grade_professores.get("ANDREY CABRAL MEIRA")
@@ -392,11 +391,13 @@ def main() -> None:
     teste2 = melhor_individuo.get("CCCO - 2.0B - M - 2024/2")
     teste3 = melhor_individuo.get("CCCO - 3.0U - M - 2024/2")
     teste4 = melhor_individuo.get("CCCO - 1.0U - M - 2024/2")
+    teste5 = melhor_individuo.get("CESF - 1.0U - M - 2024/2")
 
     display_grade(teste1, horarios)
     display_grade(teste2, horarios)
     display_grade(teste3, horarios)
     display_grade(teste4, horarios)
+    display_grade(teste5, horarios)
 
     display_grade(prof, horarios)
 
