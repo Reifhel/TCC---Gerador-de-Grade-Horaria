@@ -4,7 +4,7 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 
 
-def load_data(data_professores: pd.DataFrame, data_salas: pd.DataFrame, data_disciplinasTurmas: pd.DataFrame, disponibilidade_Professores: pd.DataFrame, semestre_atual: str) -> Data:
+def load_data(data_professores: pd.DataFrame, data_salas: pd.DataFrame, data_disciplinas_turmas: pd.DataFrame, disponibilidade_professores: pd.DataFrame, semestre_atual: str) -> Data:
 
     # Inicializando os dicionarios
     turmas: dict[str, Turma] = {}
@@ -28,7 +28,7 @@ PADRÃO (2024.1)"""]
             pass
 
     # Adicionando a carga horaria do professor
-    for _, professor in disponibilidade_Professores.iterrows():
+    for _, professor in disponibilidade_professores.iterrows():
         nome, matricula = professor['name'].split(";")
         disponibilidade = arruma_disponibilidade(professor['timeoff'])
 
@@ -40,7 +40,7 @@ PADRÃO (2024.1)"""]
             pass
 
     # Populando as disciplinas e turmas
-    for _, disciplina in data_disciplinasTurmas.iterrows():
+    for _, disciplina in data_disciplinas_turmas.iterrows():
 
         turno = sigla_turno(disciplina["Turno"])
         siglaCurso = str(disciplina["Grade Curricular"]).split(" ")[0]
@@ -53,7 +53,7 @@ PADRÃO (2024.1)"""]
         tipo = disciplina["Tipo de Atividade"]
         ch = disciplina['CH / Nº de Créditos']
         qtd_estudantes = 0
-        if (pd.isna(disciplina["qtdEstudantes"]) == False or disciplina["qtdEstudantes"] != "-"):
+        if (pd.isna(disciplina["qtdEstudantes"]) is False or disciplina["qtdEstudantes"] != "-"):
             qtd_estudantes == disciplina["qtdEstudantes"]
         periodo = disciplina['Período']
         curso = disciplina['Nome do Curso']
@@ -62,19 +62,19 @@ PADRÃO (2024.1)"""]
         chave = f'{codigo} | {turma}'
 
         if chave in disciplinas:
-            objDiscipina = disciplinas[chave]
+            obj_disciplina = disciplinas[chave]
         else:
-            objDiscipina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtd_estudantes)
+            obj_disciplina = Disciplina(nome, codigo, turma, periodo, tipo, curso, ch, qtd_estudantes)
 
-        if pd.isna(disciplina["DOCENTE"]) == False:
+        if pd.isna(disciplina["DOCENTE"]) is False:
 
             splited = disciplina["DOCENTE"].split(";")
 
-            for i in range(len(splited)):
+            for i, _ in enumerate(splited):
                 profes = splited[i].strip()
                 if profes == "Elisangela F. Manffra":
                     profes = "ELISANGELA FERRETTI MANFFRA"
-                objDiscipina.add_prof(profes)
+                obj_disciplina.add_prof(profes)
                 try:
                     prof = professores[profes]
                     prof.add_disciplina(chave)
@@ -86,21 +86,21 @@ PADRÃO (2024.1)"""]
 
         if turma not in turmas:
             turno = disciplina["Turno"]
-            if pd.isna(disciplina["Turno"]) == True:
+            if pd.isna(disciplina["Turno"]) is True:
                 turno = "Manhã"
-            objTurma = Turma(turma, curso, turno)
-            if objDiscipina not in objTurma.disciplinas:
-                objTurma.add_disciplina(objDiscipina)
-            objTurma.set_grade(criar_grade())
-            turmas[turma] = objTurma
+            obj_turma = Turma(turma, curso, turno)
+            if obj_disciplina not in obj_turma.disciplinas:
+                obj_turma.add_disciplina(obj_disciplina)
+            obj_turma.set_grade(criar_grade())
+            turmas[turma] = obj_turma
         elif turma in turmas:
             t = turmas[turma]
-            if objDiscipina not in t.disciplinas:
-                t.add_disciplina(objDiscipina)
+            if obj_disciplina not in t.disciplinas:
+                t.add_disciplina(obj_disciplina)
             turmas[turma] = t
 
         if chave not in disciplinas:
-            disciplinas[chave] = objDiscipina
+            disciplinas[chave] = obj_disciplina
 
     # Populando as salas
     for _, sala in data_salas.iterrows():
@@ -110,12 +110,12 @@ PADRÃO (2024.1)"""]
             nome_sala = sala['NOME DO ESPAÇO']
             id_sala = sala['NOME ESPAÇO ASC']
             tipo_sala = sala['TIPO DE INSTALAÇÃO DETALHADO']
-            capacidade = sala['CAPACIDADE'] if pd.isna(sala['CAPACIDADE']) == False else 0
+            capacidade = sala['CAPACIDADE'] if pd.isna(sala['CAPACIDADE']) is False else 0
             metodologia = sala['METODOGIA ATIVA?']
 
-            objSala = Sala(id_sala, nome_sala, capacidade, tipo_sala, bloco, andar, metodologia)
+            obj_sala = Sala(id_sala, nome_sala, capacidade, tipo_sala, bloco, andar, metodologia)
             if id_sala not in salas:
-                salas[id_sala] = objSala
+                salas[id_sala] = obj_sala
 
     # Retornando os dados gerais
     return Data(turmas, professores, salas, disciplinas)
@@ -130,9 +130,9 @@ def criar_grade() -> list:
 
     # Definição da Grade
     grade = []
-    dias, qtdHorarios = 6, 20                   # Seg a Sabado, 20 horários
+    dias, qtd_horarios = 6, 20                   # Seg a Sabado, 20 horários
 
-    grade = [[None for x in range(dias)] for y in range(qtdHorarios)]
+    grade = [[None for x in range(dias)] for y in range(qtd_horarios)]
 
     return grade
 
@@ -186,7 +186,7 @@ def ler_XML(arquivo: str) -> dict:
     datasets = {}
 
     # pegando os dados e passando para as variaveis
-    for i, child in enumerate(raiz):
+    for _, child in enumerate(raiz):
         colunas.append(child.attrib['columns'])
         for subchild in child:
             dados.append(subchild.attrib)

@@ -1,12 +1,6 @@
 from datetime import datetime, timedelta
 
 
-from datetime import datetime, timedelta
-
-
-from datetime import datetime, timedelta
-
-
 def pontuacao_professores(grade_professores: dict, data_professores: dict, horarios: list) -> float:
     """Função para gerar a pontuação do professor pelas restrições impostas.
 

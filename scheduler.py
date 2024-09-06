@@ -22,15 +22,15 @@ TURNOS_HORARIOS = {
 
 
 def inicializar_populacao(turmas: dict, professores: dict, salas: dict) -> list[dict]:
-    """Função inicial do algoritmo genético onde geramos uma população inicial pseudo-aleatória
+    """Função de inicialização da população usando o algoritmo 'best fit'.
 
     Args:
-        turmas (dict): Dicionário que contem os objetos de Turma
-        professores (dict): Dicionário que contem os objetos de Professor
-        salas (dict): Dicionário que contem os objetos de Salas
+        turmas (dict): Dicionário que contém os objetos de Turma.
+        professores (dict): Dicionário que contém os objetos de Professor.
+        salas (dict): Dicionário que contém os objetos de Salas.
 
     Returns:
-        list[dict]: Lista com dicionários de Individuos (Turmass) e Grade Professores
+        list[dict]: Lista com dicionários de Individuos (Turmas) e Grade Professores.
     """
     populacao = []
 
@@ -38,82 +38,70 @@ def inicializar_populacao(turmas: dict, professores: dict, salas: dict) -> list[
         individuo = {}
         grade_professores = {}
 
-        # Criando uma grade para cada professor para a população
-        for professor in professores.items():
-            nome_professor = professor[0]
-            if nome_professor not in grade_professores:
-                grade_professores[nome_professor] = criar_grade()
+        # Criar grade vazia para cada professor
+        for nome_professor in professores:
+            grade_professores[nome_professor] = criar_grade()
 
         for turma_id, turma in turmas.items():
             grade = criar_grade()
             horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
 
-            # Separar disciplinas por carga horária
-            disciplinas_prioritarias = [
-                d for d in turma.disciplinas if int(d.carga_horaria) == 6]
-            disciplinas_normais = [
-                d for d in turma.disciplinas if int(d.carga_horaria) != 6]
-
-            # Combinar disciplinas prioritárias primeiro
+            # Separar disciplinas por carga horária (maior carga primeiro)
+            disciplinas_prioritarias = [d for d in turma.disciplinas if int(d.carga_horaria) == 6]
+            disciplinas_normais = [d for d in turma.disciplinas if int(d.carga_horaria) != 6]
             disciplinas = disciplinas_prioritarias + disciplinas_normais
 
             # Para cada Disciplina da Turma
             for disciplina in disciplinas:
                 horarios_alocados = 0
                 carga_horaria = int(disciplina.carga_horaria)
-                tentativas = 0
-                while horarios_alocados < carga_horaria and tentativas < 300:
-                    dia = random.randint(0, 4)  # Seg a Sexta
 
-                    primeiroHorarioDia = horarios_possiveis[0]
+                # Tentativa de encontrar o melhor bloco contínuo
+                while horarios_alocados < carga_horaria:
+                    melhor_bloco = None
+                    melhor_dia = None
+                    melhor_horario_inicio = None
+                    melhor_bloco_livre = False
 
-                    if (grade[primeiroHorarioDia][dia] is None):
-                        horario_inicio = horarios_possiveis[0]
-                    else:
-                        horario_inicio = random.choice(horarios_possiveis)
+                    for dia in range(5):  # Segunda a Sexta
+                        for horario_inicio in horarios_possiveis:
+                            # Verificar quantos blocos consecutivos estão livres
+                            blocos_disponiveis = sum(
+                                1 for i in range(carga_horaria)
+                                if horario_inicio + i in horarios_possiveis and grade[horario_inicio + i][dia] is None
+                            )
+                            if blocos_disponiveis >= carga_horaria:
+                                # Verificar disponibilidade dos professores no mesmo horário
+                                professores_disponiveis = all(
+                                    all(grade_professores[professor][horario_inicio + i][dia] is None
+                                        for i in range(carga_horaria))
+                                    for professor in disciplina.professores
+                                )
 
-                    max_bloco = 6 if carga_horaria == 6 else 0
-                    if carga_horaria != 6:
-                        for h in range(len(horarios_possiveis)):
-                            if horarios_possiveis[h] in horarios_possiveis:
-                                max_bloco += 1
-                            else:
-                                break
-                    bloco = min(max_bloco, carga_horaria - horarios_alocados)
+                                if professores_disponiveis:
+                                    melhor_bloco = blocos_disponiveis
+                                    melhor_dia = dia
+                                    melhor_horario_inicio = horario_inicio
+                                    melhor_bloco_livre = True
+                                    break  # Encontrou o melhor bloco possível
 
-                    # Ajustar bloco para respeitar o turno
-                    if not all(horario_inicio + i in horarios_possiveis for i in range(bloco)):
-                        tentativas += 1
-                        continue
-
-                    bloco_livre = all(
-                        grade[horario_inicio + i][dia] is None for i in range(bloco))
-
-                    if bloco_livre:
-                        # Verificando se os professores estão livres nesse horário também
-                        professor_disponivel = all(
-                            all(grade_professores[professor][horario_inicio + i][dia] is None
-                                for i in range(bloco))
-                            for professor in disciplina.professores
-                        )
-
-                        # caso esteja
-                        if professor_disponivel:
-                            # Aloca o bloco na disciplina
-                            for i in range(bloco):
-                                grade[horario_inicio + i][dia] = disciplina
-                            horarios_alocados += bloco
-
-                            # Alocar na grade do professor
+                    if melhor_bloco_livre:
+                        # Alocar o bloco na disciplina e nos professores
+                        for i in range(carga_horaria):
+                            grade[melhor_horario_inicio + i][melhor_dia] = disciplina
                             for professor in disciplina.professores:
                                 nome_professor = professores[professor].nome
-                                for i in range(bloco):
-                                    grade_professores[nome_professor][horario_inicio + i][dia] = disciplina
+                                grade_professores[nome_professor][melhor_horario_inicio + i][melhor_dia] = disciplina
 
-                    tentativas += 1
+                        horarios_alocados += carga_horaria
+                    else:
+                        # Não conseguiu alocar, continuar tentando
+                        break
+
             individuo[turma_id] = grade
-        populacao.append(
-            {'Individuo': individuo, 'Grade Professor': grade_professores})
+
+        populacao.append({'Individuo': individuo, 'Grade Professor': grade_professores})
+
     return populacao
 
 
