@@ -27,7 +27,7 @@ class Turma:
         self.grade = grade
 
     def add_disciplina(self, disc: object) -> None:
-        """Adiciona uma disciplina ao Array de disciplinas do professor
+        """Adiciona uma disciplina ao Array de disciplinas da turma
 
         Args:
             disc (Disciplina): Objeto da classe Disciplina
@@ -93,7 +93,7 @@ class Professor:
 
 class Sala:
     """
-    Objeto que faz referencia aos Ambientes de Aprendizado
+    Objeto que faz referencia aos Ambientes de Aprendizagem
     """
 
     def __init__(self, id: str, nome: str, capacidade: int, tipo: str, bloco: str, andar: str, metodologia: str) -> None:
@@ -102,7 +102,7 @@ class Sala:
 
         Args:
             id (str): Nome de Registro no ASC. Ex: Bloco 01 - Amarelo;Auditório Maria Montessori
-            nome (str): Nome do ambiente de aprendizado
+            nome (str): Nome do ambiente de aprendizagem
             capacidade (int): Capacidade de estudantes
             tipo (str): Tipo de instalação
             bloco (str): Bloco localizado
@@ -140,7 +140,7 @@ class Disciplina:
             periodo (int): Ciclo da disciplina
             tipo (str): Tipo da disciplina
             curso (str): Curso de oferta da disciplina
-            carga_horaria (int): Quantidade de horas semanais da disciplinas
+            carga_horaria (int): Quantidade de horas semanais da disciplina
             qtd_estudantes (int): Quantidade de estudantes na disciplina
         """
         self.id = f"{cod_disciplina} | {turma}"
