@@ -11,6 +11,7 @@ from costs import pontuacao_indiviuo, pontuacao_professores, pontuacao_salas
 POPULACAO_TAMANHO = 50
 GERACOES = 100
 TAXA_MUTACAO = 0.7
+PROGRESSO = 0
 # Definição de horários por turno
 TURNOS_HORARIOS = {
     "Manhã":    range(1, 7),        # Manhã
@@ -304,6 +305,9 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         dict[str, Turma]: Dicionário composto pela melhor população encontrada
         dict[str, Professor]: Dicionário composto pela grade horaria dos professores para a melhor população encontrada
     """
+
+    global PROGRESSO
+
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
 
@@ -327,6 +331,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         # A cada 10 gerações, imprime a melhor aptidão encontrada até o momento
         if geracao % 10 == 0:
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
+            PROGRESSO += 10
 
     # Após todas as gerações, seleciona o melhor indivíduo da população final
     melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas, horarios))
@@ -337,7 +342,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
     return melhor_individuo, grade_professores
 
 
-def main() -> None:
+def main():
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
@@ -372,7 +377,7 @@ def main() -> None:
                      df_dispo_profes, semestre_atual)
 
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas, horarios)
-
+    
     # TESTES
     prof = grade_professores.get("ANDREY CABRAL MEIRA")
     teste1 = melhor_individuo.get("CCCO - 2.0A - M - 2024/2")
@@ -389,11 +394,13 @@ def main() -> None:
 
     display_grade(prof, horarios)
 
+    return melhor_individuo, grade_professores
+
     # for turma_id, grade in melhor_individuo.items():
     #     print(f"Turma: {turma_id}")
     #     display_grade(grade, horarios)
     #     print(data.turmas[turma_id].disciplinas)
-
+    
 
 if __name__ == "__main__":
     main()
