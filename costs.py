@@ -64,7 +64,7 @@ def pontuacao_professores(grade_professores: dict, data_professores: dict, horar
     return score
 
 
-def pontuacao_indiviuo(individuo: dict) -> float:
+def pontuacao_individuo(individuo: dict) -> float:
     """Função para gerar a pontuação do indivuduo (turma) pelas restrições impostas
 
     Args:

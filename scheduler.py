@@ -5,11 +5,12 @@ import glob
 import os
 from model import Data, Disciplina, Professor, Sala, Turma
 from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
-from costs import pontuacao_indiviuo, pontuacao_professores, pontuacao_salas
+from utils import carrega_dispo_prof, carrega_salas, carrega_prof, carrega_turmas, carregar_dados
+from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 100
+GERACOES = 1
 TAXA_MUTACAO = 0.7
 PROGRESSO = 0
 # Definição de horários por turno
@@ -122,7 +123,7 @@ def avaliar_aptidao(populacao: dict, professores: dict, salas: dict, horarios: d
     grade_professores = populacao.get('Grade Professor')
     score = 0.0
 
-    score += pontuacao_indiviuo(individuo)
+    score += pontuacao_individuo(individuo)
     score += pontuacao_professores(grade_professores, professores, horarios)
 
     return score
@@ -342,40 +343,22 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
     return melhor_individuo, grade_professores
 
 
-def main():
+def carrega_arquivos(dispo_profes: str, salas: str, turmas: str, prof: str, semestre_atual: str):
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
-    df = ler_XML(
-        "../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
-    df_dispo_profes = df['teachers']
-    df_salas = pd.read_excel(
-        "../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
-    df_salas = df_salas.drop(columns=["Unnamed: 0"])
-
-    all_files = glob.glob(os.path.join("../Data/politecnica/", "*.xlsm"))
-
-    print(all_files)
-
-    lit = []
-
-    for filename in all_files:
-        df_t = pd.read_excel(
-            filename, sheet_name="DISCIPLINAS REGULARES", skiprows=4)
-        lit.append(df_t)
-
-    df_turmas = pd.concat(lit, axis=0, ignore_index=True)
-    df_turmas = df_turmas.dropna(thresh=6)
-    df_turmas = df_turmas.rename(columns={
-                                 'DOCENTE 2024.2\nConsulte aqui\n\n(possível fazer seleção múltipla)': "DOCENTE", "Previsão de número de estudantes": 'qtdEstudantes'})
-
-    df_prof = pd.read_excel("../Data/Planilha_Geral_Professores.xlsm",
-                            sheet_name="CONSULTA - Professores", skiprows=8)
+    df_dispo_profes = carrega_dispo_prof(dispo_profes)
+    df_salas = carrega_salas(salas)
+    df_turmas = carrega_turmas(turmas)
+    df_prof = carrega_prof(prof)
 
     semestre_atual = "2024/2"
-    data = load_data(df_prof, df_salas, df_turmas,
-                     df_dispo_profes, semestre_atual)
 
+    data = carregar_dados(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
+    return data, horarios
+
+
+def main(data, horarios):
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas, horarios)
     
     # TESTES
@@ -403,4 +386,10 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    arquivo_dispo_prof = "../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml"
+    arquivo_salas = "../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx"
+    arquivo_turmas = "../Data/politecnica/"
+    arquivo_prof = "../Data/Planilha_Geral_Professores.xlsm"
+
+    data, horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
+    main(data, horarios)
