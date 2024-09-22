@@ -244,7 +244,7 @@ color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>750</x>
-        <y>300</y>
+        <y>260</y>
         <width>151</width>
         <height>51</height>
        </rect>
@@ -260,7 +260,7 @@ color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>750</x>
-        <y>430</y>
+        <y>360</y>
         <width>151</width>
         <height>51</height>
        </rect>
@@ -288,7 +288,7 @@ color: rgb(255, 255, 255);</string>
        <string>Gerar Ensalamento</string>
       </property>
      </widget>
-     <widget class="QLabel" name="titulo">
+     <widget class="QLabel" name="tituloHome">
       <property name="geometry">
        <rect>
         <x>299</x>
@@ -309,17 +309,20 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QProgressBar" name="progressoEnsalamento">
+     <widget class="QPushButton" name="botaoSala">
       <property name="geometry">
        <rect>
-        <x>290</x>
-        <y>660</y>
-        <width>431</width>
-        <height>31</height>
+        <x>750</x>
+        <y>460</y>
+        <width>151</width>
+        <height>51</height>
        </rect>
       </property>
-      <property name="value">
-       <number>24</number>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string>Verificar Sala</string>
       </property>
      </widget>
     </widget>
@@ -329,7 +332,7 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>321</width>
+        <width>311</width>
         <height>21</height>
        </rect>
       </property>
@@ -343,9 +346,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroPeriodo">
       <property name="geometry">
        <rect>
-        <x>340</x>
+        <x>330</x>
         <y>60</y>
-        <width>321</width>
+        <width>221</width>
         <height>21</height>
        </rect>
       </property>
@@ -356,9 +359,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroTurma">
       <property name="geometry">
        <rect>
-        <x>670</x>
+        <x>570</x>
         <y>60</y>
-        <width>321</width>
+        <width>311</width>
         <height>21</height>
        </rect>
       </property>
@@ -382,7 +385,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelPeriodo">
       <property name="geometry">
        <rect>
-        <x>340</x>
+        <x>330</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -395,7 +398,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelTurma">
       <property name="geometry">
        <rect>
-        <x>670</x>
+        <x>570</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -474,27 +477,11 @@ color: rgb(255, 255, 255);</string>
        </property>
       </column>
      </widget>
-     <widget class="QPushButton" name="botaoTurmaAnterior">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Turma Anterior</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="botaoExportarGrade">
       <property name="geometry">
        <rect>
         <x>420</x>
-        <y>690</y>
+        <y>680</y>
         <width>151</width>
         <height>51</height>
        </rect>
@@ -506,26 +493,10 @@ color: rgb(255, 255, 255);</string>
        <string>Exportar Grade</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="botaoProximaTurma">
-      <property name="geometry">
-       <rect>
-        <x>840</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Próxima Turma</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="tituloAbaCurso">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>300</x>
         <y>10</y>
         <width>411</width>
         <height>31</height>
@@ -541,6 +512,22 @@ color: rgb(255, 255, 255);</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="aplicarFiltrosCurso">
+      <property name="geometry">
+       <rect>
+        <x>890</x>
+        <y>60</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string>Aplicar Filtros</string>
       </property>
      </widget>
     </widget>
@@ -615,27 +602,11 @@ color: rgb(255, 255, 255);</string>
        <string>Professor</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="botaoProfAnterior">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Turma Anterior</string>
-      </property>
-     </widget>
      <widget class="QPushButton" name="botaoExportarGradeProf">
       <property name="geometry">
        <rect>
         <x>420</x>
-        <y>690</y>
+        <y>680</y>
         <width>151</width>
         <height>51</height>
        </rect>
@@ -647,26 +618,10 @@ color: rgb(255, 255, 255);</string>
        <string>Exportar Grade</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="botaoProximoProf">
-      <property name="geometry">
-       <rect>
-        <x>840</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Próxima Turma</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="labelTurmaProf">
       <property name="geometry">
        <rect>
-        <x>790</x>
+        <x>660</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -679,9 +634,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroTurmaProf">
       <property name="geometry">
        <rect>
-        <x>790</x>
+        <x>660</x>
         <y>60</y>
-        <width>201</width>
+        <width>221</width>
         <height>21</height>
        </rect>
       </property>
@@ -692,7 +647,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelPeriodoProf">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>510</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -705,9 +660,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroPeriodoProf">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>510</x>
         <y>60</y>
-        <width>241</width>
+        <width>141</width>
         <height>21</height>
        </rect>
       </property>
@@ -718,7 +673,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroCursoProf">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>280</x>
         <y>60</y>
         <width>221</width>
         <height>21</height>
@@ -734,7 +689,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelCursoProf">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>280</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -749,7 +704,7 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>291</width>
+        <width>261</width>
         <height>21</height>
        </rect>
       </property>
@@ -781,14 +736,30 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QPushButton" name="aplicarFiltrosProf">
+      <property name="geometry">
+       <rect>
+        <x>890</x>
+        <y>60</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string>Aplicar Filtros</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="salas">
      <widget class="QComboBox" name="filtroTurmaSala">
       <property name="geometry">
        <rect>
-        <x>790</x>
+        <x>660</x>
         <y>60</y>
-        <width>201</width>
+        <width>221</width>
         <height>21</height>
        </rect>
       </property>
@@ -801,7 +772,7 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>10</x>
         <y>60</y>
-        <width>291</width>
+        <width>231</width>
         <height>21</height>
        </rect>
       </property>
@@ -815,9 +786,9 @@ color: rgb(255, 255, 255);</string>
      <widget class="QComboBox" name="filtroPeriodoSala">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>480</x>
         <y>60</y>
-        <width>241</width>
+        <width>171</width>
         <height>21</height>
        </rect>
       </property>
@@ -828,7 +799,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelCursoSala">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>250</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -842,7 +813,7 @@ color: rgb(255, 255, 255);</string>
       <property name="geometry">
        <rect>
         <x>420</x>
-        <y>690</y>
+        <y>680</y>
         <width>151</width>
         <height>51</height>
        </rect>
@@ -857,7 +828,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelPeriodoSala">
       <property name="geometry">
        <rect>
-        <x>540</x>
+        <x>480</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -937,42 +908,10 @@ color: rgb(255, 255, 255);</string>
        </property>
       </column>
      </widget>
-     <widget class="QPushButton" name="botaoSalaAnterior">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Sala Anterior</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="botaoProximaSala">
-      <property name="geometry">
-       <rect>
-        <x>840</x>
-        <y>690</y>
-        <width>151</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
-      </property>
-      <property name="text">
-       <string>Próxima Sala</string>
-      </property>
-     </widget>
      <widget class="QComboBox" name="filtroCursoSala">
       <property name="geometry">
        <rect>
-        <x>310</x>
+        <x>250</x>
         <y>60</y>
         <width>221</width>
         <height>21</height>
@@ -988,7 +927,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="labelTurmaSala">
       <property name="geometry">
        <rect>
-        <x>790</x>
+        <x>660</x>
         <y>40</y>
         <width>161</width>
         <height>20</height>
@@ -1001,7 +940,7 @@ color: rgb(255, 255, 255);</string>
      <widget class="QLabel" name="tituloAbaSala">
       <property name="geometry">
        <rect>
-        <x>300</x>
+        <x>290</x>
         <y>10</y>
         <width>411</width>
         <height>31</height>
@@ -1019,48 +958,93 @@ color: rgb(255, 255, 255);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QPushButton" name="aplicarFiltrosSala">
+      <property name="geometry">
+       <rect>
+        <x>890</x>
+        <y>60</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      </property>
+      <property name="text">
+       <string>Aplicar Filtros</string>
+      </property>
+     </widget>
     </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="menuHome">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>41</width>
+      <width>31</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: white;</string>
     </property>
     <property name="icon">
      <iconset>
       <normaloff>../../../Downloads/casa.png</normaloff>../../../Downloads/casa.png</iconset>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="menuProf">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>60</x>
       <y>0</y>
-      <width>41</width>
+      <width>31</width>
       <height>31</height>
      </rect>
     </property>
-    <property name="icon">
-     <iconset>
-      <normaloff>../../../Downloads/livro.png</normaloff>../../../Downloads/livro.png</iconset>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_3">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>0</y>
-      <width>41</width>
-      <height>31</height>
-     </rect>
+    <property name="styleSheet">
+     <string notr="true">background-color: white;</string>
     </property>
     <property name="icon">
      <iconset>
       <normaloff>../../../Downloads/homem.png</normaloff>../../../Downloads/homem.png</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="menuSala">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>0</y>
+      <width>31</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: white;</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../../../Downloads/cadeira-de-escritorio.png</normaloff>../../../Downloads/cadeira-de-escritorio.png</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="menuCurso">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>0</y>
+      <width>31</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: white;</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../../../Downloads/livro.png</normaloff>../../../Downloads/livro.png</iconset>
     </property>
    </widget>
   </widget>
