@@ -4,12 +4,13 @@ import pandas as pd
 from model import Data, Disciplina, Professor, Sala, Turma
 from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
 from utils import carrega_dispo_prof, carrega_salas, carrega_prof, carrega_turmas, carregar_dados
-from costs import pontuacao_indiviuo, pontuacao_professores, pontuacao_salas
+from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 100
+GERACOES = 1
 TAXA_MUTACAO = 0.7
+PROGRESSO = 0
 # Definição de horários por turno
 TURNOS_HORARIOS = {
     "Manhã":    range(1, 7),        # Manhã
@@ -120,7 +121,7 @@ def avaliar_aptidao(populacao: dict, professores: dict, salas: dict, horarios: d
     grade_professores = populacao.get('Grade Professor')
     score = 0.0
 
-    score += pontuacao_indiviuo(individuo)
+    score += pontuacao_individuo(individuo)
     score += pontuacao_professores(grade_professores, professores, horarios)
 
     return score
@@ -303,6 +304,9 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         dict[str, Turma]: Dicionário composto pela melhor população encontrada
         dict[str, Professor]: Dicionário composto pela grade horaria dos professores para a melhor população encontrada
     """
+
+    global PROGRESSO
+
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
 
@@ -326,6 +330,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         # A cada 10 gerações, imprime a melhor aptidão encontrada até o momento
         if geracao % 10 == 0:
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
+            PROGRESSO += 10
 
     # Após todas as gerações, seleciona o melhor indivíduo da população final
     melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas, horarios))
@@ -336,19 +341,22 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
     return melhor_individuo, grade_professores
 
 
-def main() -> None:
+def carrega_arquivos(dispo_profes: str, salas: str, turmas: str, prof: str, semestre_atual: str):
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
-    df_dispo_profes = carrega_dispo_prof("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
-    df_salas = carrega_salas("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx")
-    df_turmas = carrega_turmas("../Data/politecnica/")
-    df_prof = carrega_prof("../Data/Planilha_Geral_Professores.xlsm")
+    df_dispo_profes = carrega_dispo_prof(dispo_profes)
+    df_salas = carrega_salas(salas)
+    df_turmas = carrega_turmas(turmas)
+    df_prof = carrega_prof(prof)
 
     semestre_atual = "2024/2"
 
     data = carregar_dados(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
+    return data, horarios
 
+
+def main(data, horarios):
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas, horarios)
 
     # TESTES
@@ -367,6 +375,8 @@ def main() -> None:
 
     display_grade(prof, horarios)
 
+    return melhor_individuo, grade_professores
+
     # for turma_id, grade in melhor_individuo.items():
     #     print(f"Turma: {turma_id}")
     #     display_grade(grade, horarios)
@@ -374,4 +384,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    arquivo_dispo_prof = "../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml"
+    arquivo_salas = "../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx"
+    arquivo_turmas = "../Data/politecnica/"
+    arquivo_prof = "../Data/Planilha_Geral_Professores.xlsm"
+
+    data, horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
+    main(data, horarios)
