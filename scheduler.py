@@ -1,10 +1,9 @@
 import random
 import json
 import pandas as pd
-import glob
-import os
 from model import Data, Disciplina, Professor, Sala, Turma
 from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
+from utils import carrega_dispo_prof, carrega_salas, carrega_prof, carrega_turmas, carregar_dados
 from costs import pontuacao_indiviuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
@@ -341,35 +340,14 @@ def main() -> None:
     with open('../Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
-    df = ler_XML(
-        "../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
-    df_dispo_profes = df['teachers']
-    df_salas = pd.read_excel(
-        "../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx", skiprows=1, header=1)
-    df_salas = df_salas.drop(columns=["Unnamed: 0"])
-
-    all_files = glob.glob(os.path.join("../Data/politecnica/", "*.xlsm"))
-
-    print(all_files)
-
-    lit = []
-
-    for filename in all_files:
-        df_t = pd.read_excel(
-            filename, sheet_name="DISCIPLINAS REGULARES", skiprows=4)
-        lit.append(df_t)
-
-    df_turmas = pd.concat(lit, axis=0, ignore_index=True)
-    df_turmas = df_turmas.dropna(thresh=6)
-    df_turmas = df_turmas.rename(columns={
-                                 'DOCENTE 2024.2\nConsulte aqui\n\n(possível fazer seleção múltipla)': "DOCENTE", "Previsão de número de estudantes": 'qtdEstudantes'})
-
-    df_prof = pd.read_excel("../Data/Planilha_Geral_Professores.xlsm",
-                            sheet_name="CONSULTA - Professores", skiprows=8)
+    df_dispo_profes = carrega_dispo_prof("../data/magister_asctimetables_2024-04-22-15-12-35_curitiba.xml")
+    df_salas = carrega_salas("../Data/Relatorio_dos_Espacos_de_Ensino 1.xlsx")
+    df_turmas = carrega_turmas("../Data/politecnica/")
+    df_prof = carrega_prof("../Data/Planilha_Geral_Professores.xlsm")
 
     semestre_atual = "2024/2"
-    data = load_data(df_prof, df_salas, df_turmas,
-                     df_dispo_profes, semestre_atual)
+
+    data = carregar_dados(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
 
     melhor_individuo, grade_professores = algoritmo_genetico(data.turmas, data.professores, data.salas, horarios)
 

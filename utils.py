@@ -1,6 +1,8 @@
 from model import Data, Disciplina, Professor, Sala, Turma
 
 import pandas as pd
+import glob
+import os
 import xml.etree.ElementTree as ET
 
 
@@ -272,3 +274,51 @@ def calcular_tamanho_bloco(grade: list, horario_inicio: int, dia: int, disciplin
     while horario_inicio + tamanho_bloco < len(grade) and grade[horario_inicio + tamanho_bloco][dia] == disciplina:
         tamanho_bloco += 1
     return tamanho_bloco
+
+
+def carrega_dispo_prof(caminho):
+    df = ler_XML(caminho)
+    df_dispo_profes = df['teachers']
+
+    return df_dispo_profes
+
+
+def carrega_prof(caminho):
+    df = pd.read_excel(caminho, sheet_name="CONSULTA - Professores", skiprows=8)
+
+    return df
+
+
+def carrega_salas(caminho):
+    df = pd.read_excel(caminho, skiprows=1, header=1)
+    df = df.drop(columns=["Unnamed: 0"])
+
+    return df
+
+
+def carrega_turmas(caminho):
+    print(os.access(caminho, os.R_OK))
+    all_files = glob.glob(os.path.join(f"{caminho}", "*.xlsm"))
+
+    print(all_files)
+
+    lit = []
+
+    for filename in all_files:
+        df_t = pd.read_excel(
+            filename, sheet_name="DISCIPLINAS REGULARES", skiprows=4)
+        lit.append(df_t)
+
+    df_turmas = pd.concat(lit, axis=0, ignore_index=True)
+    df_turmas = df_turmas.dropna(thresh=6)
+    df_turmas = df_turmas.rename(columns={
+                                 'DOCENTE 2024.2\nConsulte aqui\n\n(possível fazer seleção múltipla)': "DOCENTE", "Previsão de número de estudantes": 'qtdEstudantes'})
+
+    return df_turmas
+
+
+def carregar_dados(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual):
+
+    data = load_data(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
+
+    return data
