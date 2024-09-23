@@ -124,11 +124,11 @@ background-color: rgb(255, 255, 255);</string>
       <property name="midLineWidth">
        <number>0</number>
       </property>
-      <widget class="QLabel" name="arquivoTurmas">
+      <widget class="QLabel" name="pastaTurmas">
        <property name="geometry">
         <rect>
          <x>50</x>
-         <y>50</y>
+         <y>30</y>
          <width>371</width>
          <height>51</height>
         </rect>
@@ -137,14 +137,14 @@ background-color: rgb(255, 255, 255);</string>
         <string notr="true">border-color: rgb(255, 255, 255);</string>
        </property>
        <property name="text">
-        <string>Selecione o arquivo de turmas:</string>
+        <string>Selecione a pasta com os arquivos de turmas:</string>
        </property>
       </widget>
       <widget class="QLabel" name="arquivoSalas">
        <property name="geometry">
         <rect>
          <x>50</x>
-         <y>190</y>
+         <y>140</y>
          <width>371</width>
          <height>51</height>
         </rect>
@@ -156,11 +156,11 @@ background-color: rgb(255, 255, 255);</string>
         <string>Selecione o arquivo de salas:</string>
        </property>
       </widget>
-      <widget class="QLabel" name="arquivoProfs">
+      <widget class="QLabel" name="arquivoDispoProfs">
        <property name="geometry">
         <rect>
          <x>50</x>
-         <y>330</y>
+         <y>250</y>
          <width>371</width>
          <height>51</height>
         </rect>
@@ -169,14 +169,14 @@ background-color: rgb(255, 255, 255);</string>
         <string notr="true">border-color: rgb(255, 255, 255);</string>
        </property>
        <property name="text">
-        <string>Selecione o arquivo de horário dos professores:</string>
+        <string>Selecione o arquivo de disponibilidade de horários dos professores:</string>
        </property>
       </widget>
       <widget class="QPushButton" name="buscarTurma">
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>50</y>
+         <y>30</y>
          <width>141</width>
          <height>51</height>
         </rect>
@@ -193,7 +193,24 @@ color: rgb(255, 255, 255);</string>
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>190</y>
+         <y>140</y>
+         <width>141</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(150, 15, 47);
+color: rgb(255, 255, 255);</string>
+       </property>
+       <property name="text">
+        <string>Buscar</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buscarDispoProf">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>250</y>
          <width>141</width>
          <height>51</height>
         </rect>
@@ -210,7 +227,7 @@ color: rgb(255, 255, 255);</string>
        <property name="geometry">
         <rect>
          <x>440</x>
-         <y>330</y>
+         <y>360</y>
          <width>141</width>
          <height>51</height>
         </rect>
@@ -221,6 +238,22 @@ color: rgb(255, 255, 255);</string>
        </property>
        <property name="text">
         <string>Buscar</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="arquivoProfs">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>360</y>
+         <width>371</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border-color: rgb(255, 255, 255);</string>
+       </property>
+       <property name="text">
+        <string>Selecione o arquivo de dados dos professores:</string>
        </property>
       </widget>
      </widget>

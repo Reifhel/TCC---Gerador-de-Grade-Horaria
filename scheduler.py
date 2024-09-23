@@ -10,7 +10,6 @@ from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 POPULACAO_TAMANHO = 50
 GERACOES = 1
 TAXA_MUTACAO = 0.7
-PROGRESSO = 0
 # Definição de horários por turno
 TURNOS_HORARIOS = {
     "Manhã":    range(1, 7),        # Manhã
@@ -305,7 +304,6 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         dict[str, Professor]: Dicionário composto pela grade horaria dos professores para a melhor população encontrada
     """
 
-    global PROGRESSO
 
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
@@ -330,7 +328,6 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         # A cada 10 gerações, imprime a melhor aptidão encontrada até o momento
         if geracao % 10 == 0:
             print(f'Geração {geracao}, melhor aptidão: {max(fitness_scores)}')
-            PROGRESSO += 10
 
     # Após todas as gerações, seleciona o melhor indivíduo da população final
     melhor_alvo = max(populacao, key=lambda individuo: avaliar_aptidao(individuo, professores, salas, horarios))

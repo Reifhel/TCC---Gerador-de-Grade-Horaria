@@ -1,9 +1,8 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
-from PyQt5.QtCore import QTimer
 from ui_interface import Ui_MainWindow
-from scheduler import carrega_arquivos, main, PROGRESSO
+from scheduler import carrega_arquivos, main
 
 
 class Interface():
@@ -15,9 +14,21 @@ class Interface():
         # Definindo aba principal
         self.ui.stackedWidget.setCurrentWidget(self.ui.home)
 
+        # Arquivos
+        self.pastaTurmas = ""
+        self.arquivoSalas = ""
+        self.arquivoDispoProfs = ""
+        self.arquivoProfs = ""
+
         ''' Botões '''
-        # self.ui.botaoCurso.setEnabled(False)
-        # self.ui.botaoProf.setEnabled(False)
+        self.ui.botaoEnsalamento.setEnabled(False)
+        self.ui.botaoCurso.setEnabled(False)
+        self.ui.botaoProf.setEnabled(False)
+        self.ui.botaoSala.setEnabled(False)
+        self.ui.botaoExportar.setEnabled(False)
+        self.ui.menuCurso.setEnabled(False)
+        self.ui.menuProf.setEnabled(False)
+        self.ui.menuSala.setEnabled(False)
 
         # Alternar abas
         self.ui.menuHome.clicked.connect(lambda _, aba=self.ui.home: self.abrirAba(aba))
@@ -31,6 +42,7 @@ class Interface():
         # Buscar arquivos
         self.ui.buscarTurma.clicked.connect(lambda _, botao="T": self.buscarArquivo(botao))
         self.ui.buscarSala.clicked.connect(lambda _, botao="S": self.buscarArquivo(botao))
+        self.ui.buscarDispoProf.clicked.connect(lambda _, botao="DP": self.buscarArquivo(botao))
         self.ui.buscarProf.clicked.connect(lambda _, botao="P": self.buscarArquivo(botao))
 
         # Executar o código
@@ -40,7 +52,7 @@ class Interface():
         self.ui.aplicarFiltrosSala.clicked.connect(lambda _, grade="S": self.popularTabela(grade))
 
         # Estrutura padrão da tabela
-        larguraColuna = 139
+        larguraColuna = 135
         for coluna in range(self.ui.tabelaGrade.columnCount()):
             self.ui.tabelaGrade.setColumnWidth(coluna, larguraColuna)
             self.ui.tabelaGradeProfessor.setColumnWidth(coluna, larguraColuna)
@@ -53,16 +65,25 @@ class Interface():
         self.ui.stackedWidget.setCurrentWidget(aba)
 
     def buscarArquivo(self, botao):
-        file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
         if botao == "T":
-            self.ui.arquivoTurmas.setText(file[0])
-            self.arquivoTurmas = file[0]
+            file = QFileDialog.getExistingDirectory(self.janela, 'Explorador de Arquivos', os.getcwd())
+            self.ui.pastaTurmas.setText(file)
+            self.pastaTurmas = file
         elif botao == "S":
+            file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
             self.ui.arquivoSalas.setText(file[0])
             self.arquivoSalas = file[0]
+        elif botao == "DP":
+            file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
+            self.ui.arquivoDispoProfs.setText(file[0])
+            self.arquivoDispoProfs = file[0]
         else:
+            file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
             self.ui.arquivoProfs.setText(file[0])
-            self.arquivoProf = file[0]
+            self.arquivoProfs = file[0]
+
+        if self.pastaTurmas != "" and self.arquivoSalas != "" and self.arquivoDispoProfs != "" and self.arquivoProfs != "":
+            self.ui.botaoEnsalamento.setEnabled(True)
 
     def popularFiltros(self, cursos, periodos, turmas, professores):
         filtros = {
@@ -76,7 +97,7 @@ class Interface():
             self.ui.filtroTurmaProf: "Turma",
             self.ui.filtroTurmaSala: "Turma",
             self.ui.filtroProfessor: "Professor"
-            # Falta add filtroProfessor e filtroSala
+            # Falta add filtroSala
         }
 
         for filtro, contexto in filtros.items():
@@ -90,16 +111,23 @@ class Interface():
                 filtro.addItems(turmas)
 
     def popularTabela(self, grade):
-
         if grade == "C":
             tabela = self.ui.tabelaGrade
             valor_selecionado = self.ui.filtroTurma.currentText()
-            grade_selecionada = self.turmas.get(valor_selecionado)
+            if valor_selecionado == "Selecione uma turma":
+                return
+            else:
+                grade_selecionada = self.turmas.get(valor_selecionado)
+                self.ui.filtroTurma.removeItem(0)
 
         elif grade == "P":
             tabela = self.ui.tabelaGradeProfessor
             valor_selecionado = self.ui.filtroProfessor.currentText()
-            grade_selecionada = self.grade_professor.get(valor_selecionado)
+            if valor_selecionado == "Selecione um professor":
+                return
+            else:
+                grade_selecionada = self.grade_professor.get(valor_selecionado)
+                self.ui.filtroProfessor.removeItem(0)
 
         elif grade == "S":
             tabela = self.ui.tabelaGradeSala
@@ -121,23 +149,22 @@ class Interface():
                 id = str(grade_selecionada[i][j]) if str(grade_selecionada[i][j]) != "None" else "-"
                 id_atual = QTableWidgetItem(id)
                 tabela.setItem(posicao_atual, j+1, id_atual)
-
             h_cnt += 1
+
         tabela.verticalHeader().setVisible(False)
 
     def gerarEnsalamento(self):
-        arquivo_dispo_prof = self.arquivoProf
+        arquivo_dispo_prof = self.arquivoDispoProfs
         arquivo_salas = self.arquivoSalas
-        arquivo_turmas = "../Data/politecnica/"
-        arquivo_prof = self.arquivoTurmas
+        arquivo_turmas = self.pastaTurmas
+        arquivo_prof = self.arquivoProfs
 
         data, self.horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
         self.turmas, self.grade_professor = main(data, self.horarios)
-        print(self.turmas, self.grade_professor)
         cursos = []
         periodos = []
-        turmas = []
-        professores = []
+        turmas = ["Selecione uma turma"]
+        professores = ["Selecione um professor"]
         for id, value in data.turmas.items():
             if value.curso not in cursos and isinstance(value.curso, str):
                 cursos.append(value.curso)
@@ -151,6 +178,13 @@ class Interface():
                 professores.append(id)
 
         self.popularFiltros(cursos, periodos, turmas, professores)
+        self.ui.botaoCurso.setEnabled(True)
+        self.ui.botaoProf.setEnabled(True)
+        self.ui.botaoSala.setEnabled(True)
+        self.ui.botaoExportar.setEnabled(True)
+        self.ui.menuCurso.setEnabled(True)
+        self.ui.menuProf.setEnabled(True)
+        self.ui.menuSala.setEnabled(True)
 
 
 if __name__ == '__main__':
