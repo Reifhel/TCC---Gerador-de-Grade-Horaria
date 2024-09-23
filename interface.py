@@ -1,6 +1,8 @@
 import sys
 import os
+import csv
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
+from PyQt5.QtGui import QPixmap
 from ui_interface import Ui_MainWindow
 from scheduler import carrega_arquivos, main
 
@@ -20,20 +22,20 @@ class Interface():
         self.arquivoDispoProfs = ""
         self.arquivoProfs = ""
 
-        ''' Botões '''
+        # Botões iniciais
         self.ui.botaoEnsalamento.setEnabled(False)
-        self.ui.botaoCurso.setEnabled(False)
+        self.ui.botaoTurma.setEnabled(False)
         self.ui.botaoProf.setEnabled(False)
         self.ui.botaoSala.setEnabled(False)
         self.ui.botaoExportar.setEnabled(False)
-        self.ui.menuCurso.setEnabled(False)
+        self.ui.menuTurma.setEnabled(False)
         self.ui.menuProf.setEnabled(False)
         self.ui.menuSala.setEnabled(False)
 
         # Alternar abas
         self.ui.menuHome.clicked.connect(lambda _, aba=self.ui.home: self.abrirAba(aba))
-        self.ui.botaoCurso.clicked.connect(lambda _, aba=self.ui.curso: self.abrirAba(aba))
-        self.ui.menuCurso.clicked.connect(lambda _, aba=self.ui.curso: self.abrirAba(aba))
+        self.ui.botaoTurma.clicked.connect(lambda _, aba=self.ui.turma: self.abrirAba(aba))
+        self.ui.menuTurma.clicked.connect(lambda _, aba=self.ui.turma: self.abrirAba(aba))
         self.ui.botaoProf.clicked.connect(lambda _, aba=self.ui.professor: self.abrirAba(aba))
         self.ui.menuProf.clicked.connect(lambda _, aba=self.ui.professor: self.abrirAba(aba))
         self.ui.botaoSala.clicked.connect(lambda _, aba=self.ui.salas: self.abrirAba(aba))
@@ -47,71 +49,95 @@ class Interface():
 
         # Executar o código
         self.ui.botaoEnsalamento.clicked.connect(self.gerarEnsalamento)
-        self.ui.aplicarFiltrosCurso.clicked.connect(lambda _, grade="C": self.popularTabela(grade))
-        self.ui.aplicarFiltrosProf.clicked.connect(lambda _, grade="P": self.popularTabela(grade))
-        self.ui.aplicarFiltrosSala.clicked.connect(lambda _, grade="S": self.popularTabela(grade))
+        self.ui.aplicarFiltroTurma.clicked.connect(lambda _, grade="T": self.popularTabela(grade))
+        self.ui.aplicarFiltroProf.clicked.connect(lambda _, grade="P": self.popularTabela(grade))
+        self.ui.aplicarFiltroSala.clicked.connect(lambda _, grade="S": self.popularTabela(grade))
+
+        # Exportar dados
+        #self.ui.botaoExportar.clicked.connect(lambda _, tabela=self.ui.tabelaGrade: self.exportarGrade(tabela))
+        self.ui.botaoExportarGrade.clicked.connect(lambda _, contexto="T": self.exportarGrade(contexto))
+        self.ui.botaoExportarGradeProf.clicked.connect(lambda _, contexto="P": self.exportarGrade(contexto))
+        self.ui.botaoExportarGradeSala.clicked.connect(lambda _, contexto="S": self.exportarGrade(contexto))
 
         # Estrutura padrão da tabela
-        larguraColuna = 135
-        for coluna in range(self.ui.tabelaGrade.columnCount()):
+        larguraColuna = 136
+        nColunas = 7
+        for coluna in range(nColunas):
             self.ui.tabelaGrade.setColumnWidth(coluna, larguraColuna)
             self.ui.tabelaGradeProfessor.setColumnWidth(coluna, larguraColuna)
             self.ui.tabelaGradeSala.setColumnWidth(coluna, larguraColuna)
 
+
     def show(self):
         self.janela.show()
+
 
     def abrirAba(self, aba):
         self.ui.stackedWidget.setCurrentWidget(aba)
 
+
+    def exportarGrade(self, contexto):
+        if contexto == "T":
+            tabela = self.ui.tabelaGrade
+            nome_arquivo = self.ui.filtroTurma.currentText()
+        elif contexto == "P":
+            tabela = self.ui.tabelaGradeProfessor
+            nome_arquivo = self.ui.filtroProfessor.currentText()
+        elif contexto == "S":
+            tabela = self.ui.tabelaGradeSala
+            nome_arquivo = self.ui.filtroSala.currentText()
+
+        #os.makedirs(os.path.dirname("./output/"), exist_ok=True)
+        pixmap = QPixmap(tabela.size())
+        tabela.render(pixmap)
+        pixmap.save(f"{nome_arquivo}.png")
+
+
+
     def buscarArquivo(self, botao):
         if botao == "T":
             file = QFileDialog.getExistingDirectory(self.janela, 'Explorador de Arquivos', os.getcwd())
-            self.ui.pastaTurmas.setText(file)
-            self.pastaTurmas = file
+            if file != "":
+                self.ui.pastaTurmas.setText(file)
+                self.pastaTurmas = file
         elif botao == "S":
             file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
-            self.ui.arquivoSalas.setText(file[0])
-            self.arquivoSalas = file[0]
+            if file != "":
+                self.ui.arquivoSalas.setText(file[0])
+                self.arquivoSalas = file[0]
         elif botao == "DP":
             file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
-            self.ui.arquivoDispoProfs.setText(file[0])
-            self.arquivoDispoProfs = file[0]
+            if file != "":
+                self.ui.arquivoDispoProfs.setText(file[0])
+                self.arquivoDispoProfs = file[0]
         else:
             file = QFileDialog.getOpenFileName(self.janela, 'Explorador de Arquivos', os.getcwd())
-            self.ui.arquivoProfs.setText(file[0])
-            self.arquivoProfs = file[0]
+            if file != "":
+                self.ui.arquivoProfs.setText(file[0])
+                self.arquivoProfs = file[0]
 
         if self.pastaTurmas != "" and self.arquivoSalas != "" and self.arquivoDispoProfs != "" and self.arquivoProfs != "":
             self.ui.botaoEnsalamento.setEnabled(True)
 
-    def popularFiltros(self, cursos, periodos, turmas, professores):
+
+    def popularFiltros(self, turmas, professores):
         filtros = {
-            self.ui.filtroCurso: "Curso",
-            self.ui.filtroCursoProf: "Curso",
-            self.ui.filtroCursoSala: "Curso",
-            self.ui.filtroPeriodo: "Período",
-            self.ui.filtroPeriodoProf: "Período",
-            self.ui.filtroPeriodoSala: "Período",
             self.ui.filtroTurma: "Turma",
-            self.ui.filtroTurmaProf: "Turma",
-            self.ui.filtroTurmaSala: "Turma",
-            self.ui.filtroProfessor: "Professor"
-            # Falta add filtroSala
+            self.ui.filtroProfessor: "Professor",
+            self.ui.filtroSala: "Sala"
         }
 
         for filtro, contexto in filtros.items():
-            if contexto == "Curso":
-                filtro.addItems(cursos)
-            elif contexto == "Período":
-                filtro.addItems(periodos)
+            if contexto == "Turma":
+                filtro.addItems(turmas)
             elif contexto == "Professor":
                 filtro.addItems(professores)
-            else:
-                filtro.addItems(turmas)
+            elif contexto == "Sala":
+                pass
+
 
     def popularTabela(self, grade):
-        if grade == "C":
+        if grade == "T":
             tabela = self.ui.tabelaGrade
             valor_selecionado = self.ui.filtroTurma.currentText()
             if valor_selecionado == "Selecione uma turma":
@@ -153,6 +179,7 @@ class Interface():
 
         tabela.verticalHeader().setVisible(False)
 
+
     def gerarEnsalamento(self):
         arquivo_dispo_prof = self.arquivoDispoProfs
         arquivo_salas = self.arquivoSalas
@@ -161,28 +188,22 @@ class Interface():
 
         data, self.horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
         self.turmas, self.grade_professor = main(data, self.horarios)
-        cursos = []
-        periodos = []
         turmas = ["Selecione uma turma"]
         professores = ["Selecione um professor"]
-        for id, value in data.turmas.items():
-            if value.curso not in cursos and isinstance(value.curso, str):
-                cursos.append(value.curso)
-            if str(value.periodo) not in periodos and isinstance(value.periodo, float):
-                periodos.append(str(value.periodo))
+        for id, _ in data.turmas.items():
             if id not in turmas:
                 turmas.append(id)
 
-        for id, value in self.grade_professor.items():
+        for id, _ in self.grade_professor.items():
             if id not in professores:
                 professores.append(id)
 
-        self.popularFiltros(cursos, periodos, turmas, professores)
-        self.ui.botaoCurso.setEnabled(True)
+        self.popularFiltros(turmas, professores)
+        self.ui.botaoTurma.setEnabled(True)
         self.ui.botaoProf.setEnabled(True)
         self.ui.botaoSala.setEnabled(True)
         self.ui.botaoExportar.setEnabled(True)
-        self.ui.menuCurso.setEnabled(True)
+        self.ui.menuTurma.setEnabled(True)
         self.ui.menuProf.setEnabled(True)
         self.ui.menuSala.setEnabled(True)
 
