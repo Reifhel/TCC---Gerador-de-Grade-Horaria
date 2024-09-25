@@ -1,6 +1,6 @@
 import sys
 import os
-import csv
+import re
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from PyQt5.QtGui import QPixmap
 from ui_interface import Ui_MainWindow
@@ -87,10 +87,14 @@ class Interface():
             tabela = self.ui.tabelaGradeSala
             nome_arquivo = self.ui.filtroSala.currentText()
 
-        #os.makedirs(os.path.dirname("./output/"), exist_ok=True)
+        nome_arquivo = re.sub(r'[\/:*?"<>|]', '_', nome_arquivo)
+        output_dir = "./output/"
+        os.makedirs(output_dir, exist_ok=True)
         pixmap = QPixmap(tabela.size())
         tabela.render(pixmap)
-        pixmap.save(f"{nome_arquivo}.png")
+
+        caminho = os.path.join(output_dir, f"{nome_arquivo}.png")
+        pixmap.save(caminho)
 
 
 
