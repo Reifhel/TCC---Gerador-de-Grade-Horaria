@@ -1,7 +1,13 @@
 ./gerador_grade
-
 ./.mypy_cache
+./output
 
 __pycache__
 
+# Tirando os validadores
+.pylintrc
+mypy.ini
+.flake8
+
+# Tirando os comandos basicos
 commands.txt

@@ -1,0 +1,142 @@
+[
+  {
+    "period": "1",
+    "name": "07:05",
+    "short": "07:05",
+    "starttime": "07:05",
+    "endtime": "07:50"
+  },
+  {
+    "period": "2",
+    "name": "07:50",
+    "short": "07:50",
+    "starttime": "07:50",
+    "endtime": "08:35"
+  },
+  {
+    "period": "3",
+    "name": "08:35",
+    "short": "08:35",
+    "starttime": "08:35",
+    "endtime": "09:20"
+  },
+  {
+    "period": "4",
+    "name": "09:40",
+    "short": "09:40",
+    "starttime": "09:40",
+    "endtime": "10:25"
+  },
+  {
+    "period": "5",
+    "name": "10:25",
+    "short": "10:25",
+    "starttime": "10:25",
+    "endtime": "11:10"
+  },
+  {
+    "period": "6",
+    "name": "11:10",
+    "short": "11:10",
+    "starttime": "11:10",
+    "endtime": "11:55"
+  },
+  {
+    "period": "7",
+    "name": "11:55",
+    "short": "11:55",
+    "starttime": "11:55",
+    "endtime": "12:40"
+  },
+  {
+    "period": "8",
+    "name": "12:40",
+    "short": "12:40",
+    "starttime": "12:40",
+    "endtime": "13:25"
+  },
+  {
+    "period": "9",
+    "name": "13:25",
+    "short": "13:25",
+    "starttime": "13:25",
+    "endtime": "14:10"
+  },
+  {
+    "period": "10",
+    "name": "14:10",
+    "short": "14:10",
+    "starttime": "14:10",
+    "endtime": "14:55"
+  },
+  {
+    "period": "11",
+    "name": "15:15",
+    "short": "15:15",
+    "starttime": "15:15",
+    "endtime": "16:00"
+  },
+  {
+    "period": "12",
+    "name": "16:00",
+    "short": "16:00",
+    "starttime": "16:00",
+    "endtime": "16:45"
+  },
+  {
+    "period": "13",
+    "name": "16:45",
+    "short": "16:45",
+    "starttime": "16:45",
+    "endtime": "17:30"
+  },
+  {
+    "period": "14",
+    "name": "17:30",
+    "short": "17:30",
+    "starttime": "17:30",
+    "endtime": "18:15"
+  },
+  {
+    "period": "15",
+    "name": "18:15",
+    "short": "18:15",
+    "starttime": "18:15",
+    "endtime": "19:00"
+  },
+  {
+    "period": "16",
+    "name": "19:00",
+    "short": "19:00",
+    "starttime": "19:00",
+    "endtime": "19:45"
+  },
+  {
+    "period": "17",
+    "name": "19:45",
+    "short": "19:45",
+    "starttime": "19:45",
+    "endtime": "20:30"
+  },
+  {
+    "period": "18",
+    "name": "20:45",
+    "short": "20:45",
+    "starttime": "20:45",
+    "endtime": "21:30"
+  },
+  {
+    "period": "19",
+    "name": "21:30",
+    "short": "21:30",
+    "starttime": "21:30",
+    "endtime": "22:15"
+  },
+  {
+    "period": "20",
+    "name": "22:15",
+    "short": "22:15",
+    "starttime": "22:15",
+    "endtime": "23:00"
+  }
+]

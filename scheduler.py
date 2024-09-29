@@ -8,7 +8,7 @@ from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 1
+GERACOES = 100
 TAXA_MUTACAO = 0.7
 # Definição de horários por turno
 TURNOS_HORARIOS = {
@@ -304,7 +304,6 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
         dict[str, Professor]: Dicionário composto pela grade horaria dos professores para a melhor população encontrada
     """
 
-
     # Inicializa a população com possíveis soluções iniciais (cromossomos)
     populacao = inicializar_populacao(turmas, professores, salas)
 
@@ -339,7 +338,7 @@ def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professo
 
 
 def carrega_arquivos(dispo_profes: str, salas: str, turmas: str, prof: str, semestre_atual: str):
-    with open('../Data/horarios.json', 'r') as f:
+    with open('./input/Data/horarios.json', 'r') as f:
         horarios = json.load(f)
 
     df_dispo_profes = carrega_dispo_prof(dispo_profes)

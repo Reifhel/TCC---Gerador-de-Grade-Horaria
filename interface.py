@@ -1,10 +1,31 @@
 import sys
 import os
 import re
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from PyQt5.QtGui import QPixmap
-from ui_interface import Ui_MainWindow
+from UI.ui_interface import Ui_MainWindow
 from scheduler import carrega_arquivos, main
+
+
+class WorkerThread(QThread):
+    # Sinais para comunicar o status e dados da função complexa
+    progress_signal = pyqtSignal(str)
+    finished_signal = pyqtSignal(dict, dict, list)
+
+    def __init__(self, arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof):
+        super().__init__()
+        self.arquivo_dispo_prof = arquivo_dispo_prof
+        self.arquivo_salas = arquivo_salas
+        self.arquivo_turmas = arquivo_turmas
+        self.arquivo_prof = arquivo_prof
+
+    def run(self):
+        # Executa a função de gerar ensalamento
+        data, horarios = carrega_arquivos(self.arquivo_dispo_prof, self.arquivo_salas, self.arquivo_turmas, self.arquivo_prof, "2024/2")
+        turmas, grade_professor = main(data, horarios)
+        # Emite o sinal quando a função é finalizada
+        self.finished_signal.emit(turmas, grade_professor, horarios)
 
 
 class Interface():
@@ -48,13 +69,12 @@ class Interface():
         self.ui.buscarProf.clicked.connect(lambda _, botao="P": self.buscarArquivo(botao))
 
         # Executar o código
-        self.ui.botaoEnsalamento.clicked.connect(self.gerarEnsalamento)
+        self.ui.botaoEnsalamento.clicked.connect(self.iniciarThreadEnsalamento)
         self.ui.aplicarFiltroTurma.clicked.connect(lambda _, grade="T": self.popularTabela(grade))
         self.ui.aplicarFiltroProf.clicked.connect(lambda _, grade="P": self.popularTabela(grade))
         self.ui.aplicarFiltroSala.clicked.connect(lambda _, grade="S": self.popularTabela(grade))
 
         # Exportar dados
-        #self.ui.botaoExportar.clicked.connect(lambda _, tabela=self.ui.tabelaGrade: self.exportarGrade(tabela))
         self.ui.botaoExportarGrade.clicked.connect(lambda _, contexto="T": self.exportarGrade(contexto))
         self.ui.botaoExportarGradeProf.clicked.connect(lambda _, contexto="P": self.exportarGrade(contexto))
         self.ui.botaoExportarGradeSala.clicked.connect(lambda _, contexto="S": self.exportarGrade(contexto))
@@ -67,14 +87,54 @@ class Interface():
             self.ui.tabelaGradeProfessor.setColumnWidth(coluna, larguraColuna)
             self.ui.tabelaGradeSala.setColumnWidth(coluna, larguraColuna)
 
-
     def show(self):
         self.janela.show()
-
 
     def abrirAba(self, aba):
         self.ui.stackedWidget.setCurrentWidget(aba)
 
+    def iniciarThreadEnsalamento(self):
+        # Desabilita o botão enquanto a função é executada
+        self.ui.botaoEnsalamento.setEnabled(False)
+
+        # Inicializa a thread com os arquivos selecionados
+        self.worker = WorkerThread(self.arquivoDispoProfs, self.arquivoSalas, self.pastaTurmas, self.arquivoProfs)
+        self.worker.progress_signal.connect(self.atualizarStatus)  # Se precisar de atualizações de status
+        self.worker.finished_signal.connect(self.finalizarEnsalamento)
+        self.worker.start()
+
+    def finalizarEnsalamento(self, turmas, grade_professor, horarios):
+        # Recebe os dados finalizados e popula os filtros
+        self.turmas = turmas
+        self.grade_professor = grade_professor
+        self.horarios = horarios
+
+        turmas_list = ["Selecione uma turma"]
+        professores_list = ["Selecione um professor"]
+
+        for id, _ in turmas.items():
+            if id not in turmas_list:
+                turmas_list.append(id)
+
+        for id, _ in grade_professor.items():
+            if id not in professores_list:
+                professores_list.append(id)
+
+        self.popularFiltros(turmas_list, professores_list)
+
+        # Habilita os botões após a conclusão
+        self.ui.botaoTurma.setEnabled(True)
+        self.ui.botaoProf.setEnabled(True)
+        self.ui.botaoSala.setEnabled(True)
+        self.ui.botaoExportar.setEnabled(True)
+        self.ui.menuTurma.setEnabled(True)
+        self.ui.menuProf.setEnabled(True)
+        self.ui.menuSala.setEnabled(True)
+        self.ui.botaoEnsalamento.setEnabled(True)
+
+    def atualizarStatus(self, mensagem):
+        # Função opcional para atualizar status na interface
+        pass
 
     def exportarGrade(self, contexto):
         if contexto == "T":
@@ -95,8 +155,6 @@ class Interface():
 
         caminho = os.path.join(output_dir, f"{nome_arquivo}.png")
         pixmap.save(caminho)
-
-
 
     def buscarArquivo(self, botao):
         if botao == "T":
@@ -123,7 +181,6 @@ class Interface():
         if self.pastaTurmas != "" and self.arquivoSalas != "" and self.arquivoDispoProfs != "" and self.arquivoProfs != "":
             self.ui.botaoEnsalamento.setEnabled(True)
 
-
     def popularFiltros(self, turmas, professores):
         filtros = {
             self.ui.filtroTurma: "Turma",
@@ -138,7 +195,6 @@ class Interface():
                 filtro.addItems(professores)
             elif contexto == "Sala":
                 pass
-
 
     def popularTabela(self, grade):
         if grade == "T":
@@ -182,34 +238,6 @@ class Interface():
             h_cnt += 1
 
         tabela.verticalHeader().setVisible(False)
-
-
-    def gerarEnsalamento(self):
-        arquivo_dispo_prof = self.arquivoDispoProfs
-        arquivo_salas = self.arquivoSalas
-        arquivo_turmas = self.pastaTurmas
-        arquivo_prof = self.arquivoProfs
-
-        data, self.horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
-        self.turmas, self.grade_professor = main(data, self.horarios)
-        turmas = ["Selecione uma turma"]
-        professores = ["Selecione um professor"]
-        for id, _ in data.turmas.items():
-            if id not in turmas:
-                turmas.append(id)
-
-        for id, _ in self.grade_professor.items():
-            if id not in professores:
-                professores.append(id)
-
-        self.popularFiltros(turmas, professores)
-        self.ui.botaoTurma.setEnabled(True)
-        self.ui.botaoProf.setEnabled(True)
-        self.ui.botaoSala.setEnabled(True)
-        self.ui.botaoExportar.setEnabled(True)
-        self.ui.menuTurma.setEnabled(True)
-        self.ui.menuProf.setEnabled(True)
-        self.ui.menuSala.setEnabled(True)
 
 
 if __name__ == '__main__':
