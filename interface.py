@@ -1,4 +1,3 @@
-import sys
 import os
 import re
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -238,10 +237,3 @@ class Interface():
             h_cnt += 1
 
         tabela.verticalHeader().setVisible(False)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    janela = Interface()
-    janela.show()
-    sys.exit(app.exec_())

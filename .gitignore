@@ -1,6 +1,6 @@
-./gerador_grade
-./.mypy_cache
-./output
+gerador_grade/
+.mypy_cache
+output/
 
 __pycache__
 
