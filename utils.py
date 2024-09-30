@@ -4,8 +4,6 @@ import pandas as pd
 import glob
 import os
 import xml.etree.ElementTree as ET
-import os
-import glob
 
 
 def carrega_dispo_prof(caminho):

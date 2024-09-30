@@ -8,7 +8,7 @@ from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 100
+GERACOES = 50
 TAXA_MUTACAO = 0.7
 # Definição de horários por turno
 TURNOS_HORARIOS = {
@@ -165,32 +165,32 @@ def cruzamento(parents: list) -> list[dict]:
 
         # Inicializa a grade de professores do filho
         for professor in parent1['Grade Professor']:
-            grade_professores_child[professor] = [row[:]
-                                                  for row in parent1['Grade Professor'][professor]]
+            grade_professores_child[professor] = [row[:] for row in parent1['Grade Professor'][professor]]
 
-        # Para cada turma, processamos as disciplinas em grupos
+        # Para cada turma, processamos as disciplinas em blocos/dias
         for turma_id in parent1['Individuo']:
             turma_parent1 = parent1['Individuo'][turma_id]
             turma_parent2 = parent2['Individuo'][turma_id]
 
             # Inicializar a grade da turma no filho
-            child[turma_id] = [[None for _ in range(
-                len(turma_parent1[0]))] for _ in range(len(turma_parent1))]
+            child[turma_id] = [[None for _ in range(len(turma_parent1[0]))] for _ in range(len(turma_parent1))]
 
+            # Escolha de qual pai herdar por dia
             for dia in range(len(turma_parent1)):
-                for horario in range(len(turma_parent1[dia])):
-                    disciplina1 = turma_parent1[dia][horario]
-                    disciplina2 = turma_parent2[dia][horario]
-
-                    # Decide de qual pai vai herdar o grupo de disciplinas
-                    if disciplina1 and random.random() > 0.5:
-                        child[turma_id][dia][horario] = disciplina1
-                        for professor in disciplina1.professores:  # Atualiza todos os professores da disciplina
-                            grade_professores_child[professor][dia][horario] = disciplina1
-                    elif disciplina2:
-                        child[turma_id][dia][horario] = disciplina2
-                        for professor in disciplina2.professores:  # Atualiza todos os professores da disciplina
-                            grade_professores_child[professor][dia][horario] = disciplina2
+                if random.random() > 0.5:
+                    # Herdar o dia inteiro do parent1
+                    for horario in range(len(turma_parent1[dia])):
+                        child[turma_id][dia][horario] = turma_parent1[dia][horario]
+                        if turma_parent1[dia][horario]:
+                            for professor in turma_parent1[dia][horario].professores:
+                                grade_professores_child[professor][dia][horario] = turma_parent1[dia][horario]
+                else:
+                    # Herdar o dia inteiro do parent2
+                    for horario in range(len(turma_parent2[dia])):
+                        child[turma_id][dia][horario] = turma_parent2[dia][horario]
+                        if turma_parent2[dia][horario]:
+                            for professor in turma_parent2[dia][horario].professores:
+                                grade_professores_child[professor][dia][horario] = turma_parent2[dia][horario]
 
         offspring.append({
             'Individuo': child,

@@ -75,7 +75,7 @@ def pontuacao_individuo(individuo: dict) -> float:
     """
     score = 0.0
 
-    for turma_id, grade in individuo.items():
+    for _, grade in individuo.items():
         for dia in range(6):
             disciplina_dia = []
             aulas_por_dia = 0
