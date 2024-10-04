@@ -8,7 +8,7 @@ from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 50
+GERACOES = 100
 TAXA_MUTACAO = 0.7
 # Definição de horários por turno
 TURNOS_HORARIOS = {
@@ -176,21 +176,23 @@ def cruzamento(parents: list) -> list[dict]:
             child[turma_id] = [[None for _ in range(len(turma_parent1[0]))] for _ in range(len(turma_parent1))]
 
             # Escolha de qual pai herdar por dia
-            for dia in range(len(turma_parent1)):
-                if random.random() > 0.5:
+            if random.random() > 0.5:
+                for dia in range(5):
                     # Herdar o dia inteiro do parent1
-                    for horario in range(len(turma_parent1[dia])):
-                        child[turma_id][dia][horario] = turma_parent1[dia][horario]
-                        if turma_parent1[dia][horario]:
-                            for professor in turma_parent1[dia][horario].professores:
-                                grade_professores_child[professor][dia][horario] = turma_parent1[dia][horario]
-                else:
+                    for horario in range(len(turma_parent1)):
+                        child[turma_id][horario][dia] = turma_parent1[horario][dia]
+                        if turma_parent1[horario][dia]:
+                            for professor in turma_parent1[horario][dia].professores:
+                                grade_professores_child[professor][horario][dia] = turma_parent1[horario][dia]
+            else:
+                # Herdar o dia inteiro do parent2
+                for dia in range(5):
                     # Herdar o dia inteiro do parent2
-                    for horario in range(len(turma_parent2[dia])):
-                        child[turma_id][dia][horario] = turma_parent2[dia][horario]
-                        if turma_parent2[dia][horario]:
-                            for professor in turma_parent2[dia][horario].professores:
-                                grade_professores_child[professor][dia][horario] = turma_parent2[dia][horario]
+                    for horario in range(len(turma_parent2)):
+                        child[turma_id][horario][dia] = turma_parent2[horario][dia]
+                        if turma_parent2[horario][dia]:
+                            for professor in turma_parent2[horario][dia].professores:
+                                grade_professores_child[professor][horario][dia] = turma_parent2[horario][dia]
 
         offspring.append({
             'Individuo': child,
@@ -214,80 +216,90 @@ def mutacao(offspring: list[dict], turmas: dict) -> list[dict]:
     for populacao in offspring:
         individuo = populacao.get('Individuo')
         grade_professores = populacao.get('Grade Professor')
-        if random.random() < TAXA_MUTACAO:
-            turma_id = random.choice(list(individuo.keys()))
-            grade = individuo[turma_id]
-            turma = turmas[turma_id]
-            horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
 
-            # Escolher aleatoriamente um dia e horário para o primeiro bloco de disciplina1
-            dia1 = random.randint(0, 4)
-            horario1 = random.choice(horarios_possiveis)
-            disciplina1 = grade[horario1][dia1]
+        # Para cada turma na população
+        for turma_id, grade in individuo.items():
+            # Caso o valor seja selecionado para mutação
+            if random.random() < TAXA_MUTACAO:
+                turma = turmas[turma_id]
+                horarios_possiveis = list(TURNOS_HORARIOS[turma.turno])
 
-            # Verificar se a disciplina1 está no primeiro horário do seu bloco
-            while disciplina1 and (horario1 > 0 and grade[horario1 - 1][dia1] == disciplina1):
-                horario1 = random.choice(horarios_possiveis)
-                disciplina1 = grade[horario1][dia1]
+                # Verificando o maior espaço vazio na grade
+                maior_espaco, dia_espaco = verificar_maior_espaco(grade, horarios_possiveis)
 
-            if disciplina1:
-                # Encontrar um bloco diferente para troca
-                dia2 = random.randint(0, 4)
-                horario2 = random.choice(horarios_possiveis)
-                disciplina2 = grade[horario2][dia2]
-                while (dia2 == dia1 and horario2 == horario1) or (horario2 > 0 and grade[horario2 - 1][dia2] == disciplina2):
-                    dia2 = random.randint(0, 4)
-                    horario2 = random.choice(horarios_possiveis)
+                # Se tiver um espaço para 4 aulas ou mais
+                if len(maior_espaco) > 3:
+                    # Escolher uma disciplina na grade
+                    disciplina: Disciplina = random.choice(turma.disciplinas)
+                    carga_horaria = disciplina.carga_horaria
 
-                if disciplina2:
-                    # Calcular o tamanho do bloco de cada disciplina
-                    bloco1 = calcular_tamanho_bloco(
-                        grade, horario1, dia1, disciplina1)
-                    bloco2 = calcular_tamanho_bloco(
-                        grade, horario2, dia2, disciplina2)
+                    # Pegando o espaço da Disciplina
+                    espaço_disc = []
+                    dia_disc = []
+                    for dia in range(5):
+                        horas = []
+                        for horario in horarios_possiveis:
+                            if disciplina == grade[horario][dia]:
+                                horas.append(horario)
+                        if horas:
+                            espaço_disc = horas
+                            dia_disc = dia
 
-                    # Verificar se os blocos estão dentro dos limites da grade
-                    if horario1 + bloco1 <= len(horarios_possiveis) and horario2 + bloco2 <= len(horarios_possiveis):
-                        bloco1_livre = all(
-                            horario1 + i < len(horarios_possiveis) and grade[horario1 + i][dia1] == disciplina1 for i in range(bloco1)
-                        )
-                        bloco2_livre = all(
-                            horario2 + i < len(horarios_possiveis) and grade[horario2 + i][dia2] == disciplina2 for i in range(bloco2)
-                        )
+                    # Trocar os blocos
+                    qtd_a_trocar = int(min(carga_horaria, len(maior_espaco), len(espaço_disc)))
 
-                        if bloco1_livre and bloco2_livre:
-                            # Verificar disponibilidade de todos os professores de disciplina1 nos novos horários
-                            professor1_disponivel = all(
-                                all(grade_professores[professor][horario2 + i][dia2] is None
-                                    for i in range(bloco1))
-                                for professor in disciplina1.professores
-                            )
-                            # Verificar disponibilidade de todos os professores de disciplina2 nos novos horários
-                            professor2_disponivel = all(
-                                all(grade_professores[professor][horario1 + i][dia1] is None
-                                    for i in range(bloco2))
-                                for professor in disciplina2.professores
-                            )
+                    professor_disponivel = all(
+                        all(grade_professores[professor][maior_espaco[i]][dia_espaco] is None
+                            for i in range(qtd_a_trocar))
+                        for professor in disciplina.professores
+                    )
 
-                            if professor1_disponivel and professor2_disponivel:
-                                # Realizar a troca
+                    if professor_disponivel:
+                        for i in range(qtd_a_trocar):
+                            t = grade[espaço_disc[i]][dia_disc]
+                            grade[espaço_disc[i]][dia_disc] = None
+                            grade[maior_espaco[i]][dia_espaco] = t
 
-                                for i in range(min(bloco1, bloco2)):
-                                    t = grade[horario1 + i][dia1]
-                                    grade[horario1 + i][dia1] = grade[horario2 + i][dia2]
-                                    grade[horario2 + i][dia2] = t
+                            for professor in disciplina.professores:
+                                t = grade[espaço_disc[i]][dia_disc]
+                                grade_professores[professor][espaço_disc[i]][dia_disc] = None
+                                grade_professores[professor][maior_espaco[i]][dia_espaco] = t
 
-                                    # Atualizar a grade dos professores usando o nome dos professores
-                                    for professor in disciplina1.professores:
-                                        grade_professores[professor][horario1 + i][dia1] = None
-                                        grade_professores[professor][horario2 + i][dia2] = disciplina1
+                else:
+                    pass
 
-                                    for professor in disciplina2.professores:
-                                        grade_professores[professor][horario2 + i][dia2] = None
-                                        grade_professores[professor][horario1 + i][dia1] = disciplina2
+                individuo[turma_id] = grade
+            # Se não entrar na mutação passa
+            else:
+                pass
 
-            individuo[turma_id] = grade
     return offspring
+
+
+def verificar_maior_espaco(grade: list, horarios_possiveis: list) -> list:
+    # Verificar maior espaço vago
+    maior_espaco = []
+    dia_escolhido = 0
+    for dia in range(5):
+        espaco_atual = []
+        espacos = []
+        for horario in horarios_possiveis:
+            if grade[horario][dia] is None:
+                espaco_atual.append(horario)
+            else:
+                if espaco_atual:
+                    espacos.append(espaco_atual)  # Adiciona o espaço atual à lista de espaços
+                    espaco_atual = []  # Reseta o espaço atual
+        if espaco_atual:
+            espacos.append(espaco_atual)  # Adiciona o último bloco de horários vagos, se existir
+
+        # Encontra o maior bloco de horários vagos
+        for espaco in espacos:
+            if len(espaco) > len(maior_espaco):
+                maior_espaco = espaco
+                dia_escolhido = dia
+
+    return maior_espaco, dia_escolhido
 
 
 def algoritmo_genetico(turmas: dict[str, Turma], professores: dict[str, Professor], salas: dict[str, Sala], horarios: dict):
@@ -361,7 +373,7 @@ def main(data, horarios):
     teste2 = melhor_individuo.get("CCCO - 2.0B - M - 2024/2")
     teste3 = melhor_individuo.get("CCCO - 3.0U - M - 2024/2")
     teste4 = melhor_individuo.get("CCCO - 1.0U - M - 2024/2")
-    teste5 = melhor_individuo.get("CESF - 1.0U - M - 2024/2")
+    teste5 = melhor_individuo.get("CCCO - 4.0U - N - 2024/2")
 
     display_grade(teste1, horarios)
     display_grade(teste2, horarios)

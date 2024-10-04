@@ -76,6 +76,11 @@ def pontuacao_individuo(individuo: dict) -> float:
     score = 0.0
 
     for _, grade in individuo.items():
+
+        tem_janela = encontrar_janelas(grade)
+        if tem_janela:
+            score -= 2
+
         for dia in range(6):
             disciplina_dia = []
             aulas_por_dia = 0
@@ -143,6 +148,23 @@ def calcula_interjornada(horario_termino: datetime, horario_inicio_proximo_dia: 
         score += 1  # Aumento por respeitar
 
     return score
+
+
+def encontrar_janelas(matriz):
+    linhas = len(matriz)
+    colunas = len(matriz[0])
+    gaps = []
+
+    # Iterar por cada coluna
+    for col in range(colunas):
+        valores_na_coluna = [matriz[linha][col] for linha in range(linhas)]
+
+        # Verifica gaps entre valores diferentes de 0
+        for i in range(1, linhas - 1):
+            if valores_na_coluna[i] == None and valores_na_coluna[i-1] != None and valores_na_coluna[i+1] != None:
+                gaps.append((i, col))
+
+    return bool(gaps)
 
 
 # if __name__ == "__main__":
