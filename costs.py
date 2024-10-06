@@ -15,6 +15,11 @@ def pontuacao_professores(grade_professores: dict, data_professores: dict, horar
     score = 0.0
 
     for nome_professor, grade in grade_professores.items():
+
+        tem_janela = encontrar_janelas(grade)
+        if tem_janela:
+            score -= 2
+
         for dia in range(6):
 
             # Contador para verificar carga máxima diária do professor
@@ -96,8 +101,6 @@ def pontuacao_individuo(individuo: dict) -> float:
                 # Mais de 2 disciplinas por dia
                 if len(disciplina_dia) > 2:
                     score -= 1
-
-            disciplina_dia = []
 
     return score
 
