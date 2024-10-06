@@ -1,5 +1,6 @@
 import os
 import re
+import pandas as pd
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from PyQt5.QtGui import QPixmap
@@ -74,9 +75,10 @@ class Interface():
         self.ui.aplicarFiltroSala.clicked.connect(lambda _, grade="S": self.popularTabela(grade))
 
         # Exportar dados
-        self.ui.botaoExportarGrade.clicked.connect(lambda _, contexto="T": self.exportarGrade(contexto))
-        self.ui.botaoExportarGradeProf.clicked.connect(lambda _, contexto="P": self.exportarGrade(contexto))
-        self.ui.botaoExportarGradeSala.clicked.connect(lambda _, contexto="S": self.exportarGrade(contexto))
+        self.ui.botaoExportarGrade.clicked.connect(lambda _, contexto="T": self.exportarGradePrint(contexto))
+        self.ui.botaoExportarGradeProf.clicked.connect(lambda _, contexto="P": self.exportarGradePrint(contexto))
+        self.ui.botaoExportarGradeSala.clicked.connect(lambda _, contexto="S": self.exportarGradePrint(contexto))
+        self.ui.botaoExportar.clicked.connect(self.exportarGrade)
 
         # Estrutura padrão da tabela
         larguraColuna = 136
@@ -135,7 +137,43 @@ class Interface():
         # Função opcional para atualizar status na interface
         pass
 
-    def exportarGrade(self, contexto):
+    def exportarGrade(self):
+        dias = ['Segunda-feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sabádo']
+
+        dados = []
+        grades = self.turmas
+        horarios = self.horarios
+
+        for turma_id, grade in grades.items():
+            for horario_idx, linha in enumerate(grade):
+                hora = horarios[horario_idx]
+                horario_inicio = hora['starttime']
+                horario_fim = hora['endtime']  # Acessa o horário correspondente
+                for dia_idx, disc in enumerate(linha):
+                    if disc:  # Se houver uma aula nesse horário e dia
+                        dados.append({
+                            "turma": turma_id,
+                            "curso": disc.curso,
+                            "disciplina": disc.nome,
+                            "professor": disc.professores,
+                            "horario_inicio": horario_inicio,
+                            "horario_fim": horario_fim,
+                            "dia": dias[dia_idx]
+                        })
+
+        # Converte a lista de dados em um DataFrame
+        df = pd.DataFrame(dados)
+        output_dir = "./output"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Salva o DataFrame como um arquivo Excel dentro da pasta ./output
+        output_path = os.path.join(output_dir, "grade_horaria_detalhada.xlsx")
+        df.to_excel(output_path, index=False)
+
+        # Salva o DataFrame como um arquivo Excel
+        df.to_excel("./output/grade_horaria_detalhada.xlsx", index=False)
+
+    def exportarGradePrint(self, contexto):
         if contexto == "T":
             tabela = self.ui.tabelaGrade
             nome_arquivo = self.ui.filtroTurma.currentText()

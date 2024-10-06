@@ -322,3 +322,40 @@ def carregar_dados(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual
     data = load_data(df_prof, df_salas, df_turmas, df_dispo_profes, semestre_atual)
 
     return data
+
+
+def cria_excel(horarios, grades):
+    dias = ['Segunda-feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sabádo']
+
+    dados = []
+
+    for turma_id, grade in grades.items():
+        for horario_idx, linha in enumerate(grade):
+            hora = horarios[horario_idx]
+            horario_inicio = hora['starttime']
+            horario_fim = hora['endtime']  # Acessa o horário correspondente
+            for dia_idx, disc in enumerate(linha):
+                if disc:  # Se houver uma aula nesse horário e dia
+                    dados.append({
+                        "turma": turma_id,
+                        "curso": disc.curso,
+                        "disciplina": disc.nome,
+                        "professor": disc.professores,
+                        "horario_inicio": horario_inicio,
+                        "horario_fim": horario_fim,
+                        "dia": dias[dia_idx]
+                    })
+
+    # Converte a lista de dados em um DataFrame
+    df = pd.DataFrame(dados)
+    output_dir = "./output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Salva o DataFrame como um arquivo Excel dentro da pasta ./output
+    output_path = os.path.join(output_dir, "grade_horaria_detalhada.xlsx")
+    df.to_excel(output_path, index=False)
+
+    # Salva o DataFrame como um arquivo Excel
+    df.to_excel("./output/grade_horaria_detalhada.xlsx", index=False)
+
+    return

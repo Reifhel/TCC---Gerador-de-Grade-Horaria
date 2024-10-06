@@ -2,13 +2,13 @@ import random
 import json
 import pandas as pd
 from model import Data, Disciplina, Professor, Sala, Turma
-from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco
+from utils import load_data, ler_XML, criar_grade, display_grade, calcular_tamanho_bloco, cria_excel
 from utils import carrega_dispo_prof, carrega_salas, carrega_prof, carrega_turmas, carregar_dados
 from costs import pontuacao_individuo, pontuacao_professores, pontuacao_salas
 
 # Parâmetros
 POPULACAO_TAMANHO = 50
-GERACOES = 100
+GERACOES = 2
 TAXA_MUTACAO = 0.7
 # Definição de horários por turno
 TURNOS_HORARIOS = {
@@ -17,6 +17,16 @@ TURNOS_HORARIOS = {
     "Noite":    range(14, 20),      # Noite
     "Integral": range(0, 13),        # Integral
     "nan": range(0, 20)
+}
+
+# De -> Para Escolas
+ESCOLAS = {
+    1: "Bloco 01",
+    2: "Bloco 02",
+    3: "Bloco 03",
+    4: "Bloco 04",
+    5: "Bloco 05",
+    6: "Bloco 06"
 }
 
 
@@ -440,4 +450,6 @@ if __name__ == "__main__":
     arquivo_prof = "../Data/Planilha_Geral_Professores.xlsm"
 
     data, horarios = carrega_arquivos(arquivo_dispo_prof, arquivo_salas, arquivo_turmas, arquivo_prof, "2024/2")
-    main(data, horarios)
+    melhor_individuo, _ = main(data, horarios)
+
+    cria_excel(horarios, melhor_individuo)
