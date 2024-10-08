@@ -3,15 +3,17 @@ class Turma:
     Objeto de Turma
     """
 
-    def __init__(self, id: str, curso: str, turno: str):
+    def __init__(self, id: str, periodo: float, curso: str, turno: str):
         """
         Iniciador de uma nova instância de Turma
         Args:
             id (str): Identificador da turma, EX: CCCO - 4.0U - N - 2024/1
+            periodo (float): Período da turma
             curso (str): Nome do curso
             turno (str): Turno da turma (Manhã, tarde, noite ou integral)
         """
         self.id = id
+        self.periodo = periodo
         self.curso = curso
         self.grade: list[list] = []
         self.turno = turno
